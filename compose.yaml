@@ -1,0 +1,28 @@
+services:
+  database:
+    container_name: kanta
+    image: postgres:17.0
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+
+  database-migrations:
+    image: flyway/flyway:11
+    env_file:
+      - .env
+    depends_on:
+      - database
+    volumes:
+      - ./database-migrations:/flyway/sql
+    command: -connectRetries=60 -baselineOnMigrate=true migrate
+
+  app:
+    build: .
+    depends_on:
+      - database
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
