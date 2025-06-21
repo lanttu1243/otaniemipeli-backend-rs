@@ -11,7 +11,7 @@ use crate::db_connection::*;
 use super::types::*;
 use std::io::Read;
 
-pub fn start(port: u16) {
+pub fn start(port: String) {
     let conn_str = build_connection_string();
     println!("{:?}", conn_str);
     println!("\nServer started at port {}", port);
