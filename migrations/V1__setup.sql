@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS places (
 CREATE TABLE IF NOT EXISTS ingredients (
     ingredient_id   SERIAL PRIMARY KEY,
     name            TEXT,
-    quantity        FLOAT,
     abv             FLOAT,
     carbonated      BOOLEAN
 );
@@ -42,6 +41,7 @@ CREATE TABLE IF NOT EXISTS turns (
 CREATE TABLE IF NOT EXISTS drink_ingredients (
     drink_id        INTEGER REFERENCES drinks(drink_id),
     ingredient_id   INTEGER REFERENCES ingredients(ingredient_id),
+    quantity        FLOAT,
     PRIMARY KEY (drink_id, ingredient_id)
 );
 CREATE TABLE IF NOT EXISTS turn_drinks (

@@ -22,7 +22,7 @@ pub fn router(pool: Pool) -> impl Fn(&Request) -> Response + Send + Sync + 'stat
                 match GLOBAL_RT.block_on(get_games(client)) {
                     Ok(games) if games.games.is_empty() =>
                         Response::text("There are no games").with_status_code(404),
-                    Ok(games)  => Response::json(&games),
+                    Ok(games)  => Response::json(&games).with_status_code(200),
                     Err(e)     => Response::text(format!("{e}")).with_status_code(500),
                 }
             },
