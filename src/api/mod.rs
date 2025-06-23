@@ -1,20 +1,13 @@
 pub mod games;
-mod drinks;
+pub mod drinks;
 
-use rouille::{Request, Response};
+use axum::Router;
 use deadpool_postgres::Pool;
+use crate::utils::state::AppState;
 
-pub fn router(pool: Pool) -> impl Fn(&Request) -> Response + Send + Sync + 'static {
+pub fn router() -> Router<AppState> {
     
-    let games = games::router(pool.clone());
-    let drinks = drinks::router(pool.clone());
-    
-    move |req| {
-        let resp = games(req);
-        if resp.status_code != 404 {return resp}
-        let resp = drinks(req);
-        if resp.status_code != 404 {return resp}
-        
-        Response::empty_404()
-    }
+    Router::new()
+        .merge(drinks::router())
+        // .route("/games", games::router)
 }

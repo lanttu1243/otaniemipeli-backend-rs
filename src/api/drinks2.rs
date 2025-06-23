@@ -1,10 +1,11 @@
+use axum::Router;
 use deadpool_postgres::Pool;
-use rouille::{router, Request, Response};
 use crate::utils::runtime::GLOBAL_RT;
+use crate::utils::state::AppState;
 use crate::database::{utils::*, drinks::*};
 use crate::utils::types::{Drink, DrinkIngredientsNoIngredients, DrinkIngredientsPost, DrinkQty, Ingredient};
 
-pub fn router(pool: Pool) -> impl Fn(&Request) -> Response + Send + Sync + 'static {
+pub fn router(pool: Pool) -> Router<AppState> {
     move |request| {
         router!(request,
             (GET) (/api/ingredients) => {
@@ -126,7 +127,7 @@ pub fn router(pool: Pool) -> impl Fn(&Request) -> Response + Send + Sync + 'stat
                     _ => {}};
                 Response::text("Drink ingredients added successfully!").with_status_code(201)
             },
-            (DELETE) (/api/drink/ingredients/{id: i32}) => {
+            (DELETE) (/api/ingredients/{id: i32}) => {
                 println!("DELETE /api/drink/ingredients");
                 let client = match db_client(&pool) {
                     Ok(c)  => c,

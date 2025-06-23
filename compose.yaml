@@ -9,7 +9,7 @@ services:
       interval: 5s
       retries: 5
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${PUBLIC_PG_PORT}:${PUBLIC_PG_PORT}"
     env_file:
       - .env
 

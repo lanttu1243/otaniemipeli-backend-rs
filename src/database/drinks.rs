@@ -14,7 +14,7 @@ use crate::utils::{
 };
 use crate::utils::types::DrinkIngredientsPost;
 
-pub async fn get_ingredients(client: Client) -> Result<Ingredients, PgError>{
+pub async fn get_ingredients(client: &Client) -> Result<Ingredients, PgError>{
     
     let query_str = "\
     SELECT ingredient_id, name, abv, carbonated FROM ingredients";
@@ -36,7 +36,31 @@ pub async fn get_ingredients(client: Client) -> Result<Ingredients, PgError>{
     }
     Ok(Ingredients{ingredients})
 }
-pub async fn post_ingredient(client: Client, ingredient: Ingredient) -> Result<u64, PgError> {
+pub async fn get_ingredient(client: &Client, id: i32) -> Result<Ingredient, PgError>{
+    let query_str = "\
+    SELECT ingredient_id, name, abv, carbonated FROM ingredients WHERE id = $1";
+
+    match client.query(query_str, &[&id]).await {
+        Ok(r) if r.is_empty() => {
+            Ok(Ingredient {
+                id: -1,
+                name: "NONE".parse().unwrap(),
+                abv: -1.0,
+                carbonated: false,
+            })
+        },
+        Ok(r) => {
+            Ok(Ingredient{
+                id: r.first().unwrap().get(0),
+                name: r.first().unwrap().get(1),
+                abv: r.first().unwrap().get(2),
+                carbonated: r.first().unwrap().get(3),
+            })
+        },
+        Err(e) => Err(e)
+    }
+}
+pub async fn post_ingredient(client: &Client, ingredient: Ingredient) -> Result<u64, PgError> {
     let query_str = "\
     INSERT INTO ingredients (name, abv, carbonated) VALUES ($1, $2, $3)";
     
@@ -46,13 +70,13 @@ pub async fn post_ingredient(client: Client, ingredient: Ingredient) -> Result<u
         &ingredient.carbonated
     ]).await
 }
-pub async fn delete_ingredient(client: Client, ingredient_id: i32) -> Result<u64, PgError> {
+pub async fn delete_ingredient(client: &Client, ingredient_id: i32) -> Result<u64, PgError> {
     let query_str = "\
     DELETE FROM ingredients WHERE ingredient_id = $1";
     
     client.execute(query_str, &[&ingredient_id]).await
 }
-pub async fn create_drink(client: Client, drink: Drink) -> Result<u64, PgError> {
+pub async fn create_drink(client: &Client, drink: Drink) -> Result<u64, PgError> {
     let query_str = "\
     INSERT INTO drinks (name) VALUES ($1)";
     
@@ -85,7 +109,7 @@ pub async fn add_ingredient(client: &Client, drink_id: i32, ingredient_id: i32, 
     
     client.execute(query_str, &[&drink_id, &ingredient_id, &quantity]).await
 }
-pub async fn add_ingredients(client: Client, drink_ingredient: DrinkIngredientsPost) -> Result<u64, PgError> {
+pub async fn add_ingredients(client: &Client, drink_ingredient: DrinkIngredientsPost) -> Result<u64, PgError> {
     let drink_id: i32 = drink_ingredient.drink.id;
     let mut rows = 0;
     for ingredient in &drink_ingredient.ingredients {
@@ -138,7 +162,7 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
     Ok(drink_ingredients)
 }
 
-pub async fn get_drinks_ingredients(client: Client) -> Result<DrinksIngredients, PgError> {
+pub async fn get_drinks_ingredients(client: &Client) -> Result<DrinksIngredients, PgError> {
     let mut drink_ingredients: Vec<DrinkIngredients> = Vec::new();
     let drinks = match get_drinks(&client).await {
         Ok(drinks) if drinks.drinks.is_empty() => {

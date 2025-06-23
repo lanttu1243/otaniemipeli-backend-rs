@@ -1,41 +1,46 @@
 use std::env;
-use rouille::{router, Request, Response};
 use crate::api::router as api_router;
 use crate::database::utils::make_pool;
-use tokio::task;
-
+use tokio::{
+    net::TcpListener,
+};
+use axum::{
+    routing::get,
+    Router,
+    serve::Serve,
+};
+use crate::utils::state;
 
 pub async fn start() -> anyhow::Result<()> {
-    let port = env::var("PORT").unwrap_or_else(|_| String::from("8000"));
-    let db_url = match env::var("DATABASE_URL") {
+    dotenvy::dotenv().ok();
+    let port = env::var("PORT").unwrap_or_else(|_| {
+        eprintln!("PORT environment variable not set");
+        "8000".to_string()
+    });
+    let db_url = match env::var("POSTGRES_URL") {
         Ok(url) => url,
-        Err(_) => panic!("DATABASE_URL must be set"),
+        Err(_) => panic!("POSTGRES_URL must be set"),
     };
-    let pool = make_pool(&db_url)?;
+    let pool = match make_pool(&db_url) {
+        Ok(pool) => pool,
+        Err(_) => panic!("Failed to create pool"),
+    };
     
-    match task::spawn_blocking(move || {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("Could not build tokio runtime");
-        
-        let _guard = rt.enter();
-        
-        let bind = format!("0.0.0.0:{}", port);
-        println!("\nServer started at port {}", port);
-        
-        rouille::start_server(bind, move |request: &Request| {
-            router!(request,
-                (GET) (/) => {
-                    println!("GET /");
-                    Response::text("The backend for Otaniemipeli is up and running...")
-                },
-                _ => api_router(pool.clone())(request)
-            )
-        });
-    })
-    .await {
-        Ok(res) => res,
-        Err(e) => Err(anyhow::Error::new(e))
-    }
+    let bind = format!("0.0.0.0:{}", port);
+    println!("\nServer started at port {}", port);
+
+    let state = state::AppState::new(pool);
+
+    let app = Router::new()
+        .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
+        .nest("/api", api_router())
+        .with_state(state);
+    
+    let listener = match TcpListener::bind(&bind).await {
+        Ok(listener) => listener,
+        Err(error) => panic!("Could not bind to {}: {}", bind, error),
+    };
+    
+    axum::serve(listener, app).await?;
+    Ok(())
 }
