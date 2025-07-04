@@ -27,6 +27,26 @@ pub struct Boards {
     pub boards: Vec<Board>,
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct BoardPlaces {
+    pub board: Board,
+    pub name: String,
+    pub places: Vec<BoardPlace>
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Place {
+    pub id: i32,
+    pub name: String,
+    pub refill: bool,
+    pub special_rule: String,
+    pub drink: Drink,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct BoardPlace {
+    pub board: Board,
+    pub place: Place,
+    pub number: i32
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Ingredient {
     pub id: i32,
     pub name: String,
@@ -55,12 +75,6 @@ pub struct DrinkIngredients {
     pub ingredients: Vec<IngredientQty>,
 }
 #[derive(Clone, Serialize, Deserialize)]
-pub struct DrinkIngredientsNoIngredients {
-    pub drink: Drink,
-    pub quantity: f64,
-    pub abv: f64,
-}
-#[derive(Clone, Serialize, Deserialize)]
 pub struct DrinkIngredientsPost {
     pub drink: Drink,
     pub ingredients: Vec<IngredientQty>,
@@ -70,10 +84,20 @@ pub struct DrinksIngredients {
     pub drink_ingredients: Vec<DrinkIngredients>,
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct ResultIntJson {
+    pub int: i32,
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Drinks {
     pub drinks: Vec<Drink>,
 }
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DrinkQty {
-    pub drinks: Vec<DrinkIngredientsNoIngredients>
+
+#[derive(Deserialize)]
+pub struct IngredientsQuery {
+    pub with_ingredients: bool,
+}
+
+#[derive(Deserialize)]
+pub struct IngredientIdQuery {
+    pub ingredient_id: i32,
 }

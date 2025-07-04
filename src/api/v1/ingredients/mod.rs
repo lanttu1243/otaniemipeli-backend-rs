@@ -1,9 +1,9 @@
 use axum::Router;
 use axum::routing::{delete, get};
-use crate::api::drinks::utils::*;
 use crate::utils::state::AppState;
 
 pub mod utils;
+use self::utils::*;
 
 pub fn router() -> Router<AppState> {
     Router::new()

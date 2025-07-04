@@ -6,11 +6,12 @@ CREATE TABLE IF NOT EXISTS games (
     game_id         SERIAL PRIMARY KEY,
     date            DATE DEFAULT CURRENT_TIMESTAMP,
     name            TEXT DEFAULT '',
-    board           INTEGER REFERENCES boards(board_id)
+    finished        BOOLEAN DEFAULT false,
+    board_id        INTEGER REFERENCES boards(board_id)
 );
 CREATE TABLE IF NOT EXISTS teams (
     team_id         SERIAL PRIMARY KEY,
-    game            INTEGER REFERENCES games(game_id),
+    game_id            INTEGER REFERENCES games(game_id),
     name            TEXT
 );
 CREATE TABLE IF NOT EXISTS drinks (
@@ -20,8 +21,7 @@ CREATE TABLE IF NOT EXISTS drinks (
 CREATE TABLE IF NOT EXISTS places (
     place_id        SERIAL PRIMARY KEY,
     place_name      TEXT,
-    refill          BOOLEAN,
-    drink           INTEGER REFERENCES drinks(drink_id)
+    rule            TEXT DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS ingredients (
     ingredient_id   SERIAL PRIMARY KEY,
@@ -31,10 +31,17 @@ CREATE TABLE IF NOT EXISTS ingredients (
 );
 CREATE TABLE IF NOT EXISTS turns (
     turn_id         SERIAL PRIMARY KEY,
-    team            INTEGER REFERENCES teams(team_id),
-    game            INTEGER REFERENCES games(game_id),
+    start_time      DATE DEFAULT CURRENT_TIMESTAMP,
+    team_id         INTEGER REFERENCES teams(team_id),
+    game_id         INTEGER REFERENCES games(game_id),
     dice1           INTEGER,
     dice2           INTEGER
+);
+CREATE TABLE IF NOT EXISTS penalties (
+    penalty_id      SERIAL PRIMARY KEY,
+    team_id         INTEGER REFERENCES teams(team_id),
+    turn_id         INTEGER REFERENCES turns(turn_id),
+    drink_id        INTEGER REFERENCES drinks(drink_id)
 );
 
 -- Relation-tables
@@ -52,8 +59,16 @@ CREATE TABLE IF NOT EXISTS turn_drinks (
 );
 CREATE TABLE IF NOT EXISTS board_places (
     board_id        INTEGER REFERENCES boards(board_id),
-    place_number    INTEGER,
+    place_number    INTEGER UNIQUE,
     place_id        INTEGER REFERENCES places(place_id),
+    start           BOOLEAN default FALSE,
+    "end"           BOOLEAN default FALSE,
     PRIMARY KEY (board_id, place_number)
 );
-
+CREATE TABLE IF NOT EXISTS place_drinks (
+    drink_id        INTEGER REFERENCES drinks(drink_id),
+    place_id        INTEGER REFERENCES places(place_id),
+    refill          BOOLEAN default FALSE,
+    optional        BOOLEAN default FALSE,
+    "default"       BOOLEAN default TRUE
+);

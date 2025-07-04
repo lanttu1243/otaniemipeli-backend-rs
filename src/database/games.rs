@@ -1,7 +1,7 @@
 use deadpool_postgres::{Client};
 use crate::utils::types::*;
 
-pub async fn get_games(client: Client) -> Result<Games, PgError> {
+pub async fn get_games(client: &Client) -> Result<Games, PgError> {
 
     let query_str = "
     SELECT 
@@ -29,7 +29,7 @@ pub async fn get_games(client: Client) -> Result<Games, PgError> {
     Ok(Games {games})
 }
 
-pub async fn post_game(client: Client, game: PostGame) -> Result<u64, PgError> {
+pub async fn post_game(client: &Client, game: PostGame) -> Result<u64, PgError> {
     
     let query_str = "\
     INSERT INTO games (name, board) VALUES ($1, $2)";

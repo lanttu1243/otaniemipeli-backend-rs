@@ -38,7 +38,7 @@ pub async fn get_ingredients(client: &Client) -> Result<Ingredients, PgError>{
 }
 pub async fn get_ingredient(client: &Client, id: i32) -> Result<Ingredient, PgError>{
     let query_str = "\
-    SELECT ingredient_id, name, abv, carbonated FROM ingredients WHERE id = $1";
+    SELECT ingredient_id, name, abv, carbonated FROM ingredients WHERE ingredient_id = $1";
 
     match client.query(query_str, &[&id]).await {
         Ok(r) if r.is_empty() => {
@@ -76,7 +76,12 @@ pub async fn delete_ingredient(client: &Client, ingredient_id: i32) -> Result<u6
     
     client.execute(query_str, &[&ingredient_id]).await
 }
-pub async fn create_drink(client: &Client, drink: Drink) -> Result<u64, PgError> {
+pub async fn delete_drink(client: &Client, drink_id: i32) -> Result<u64, PgError> {
+    let query_str = "\
+    DELETE FROM drinks WHERE drink_id = $1";
+    client.execute(query_str, &[&drink_id]).await
+}
+pub async fn post_drink(client: &Client, drink: Drink) -> Result<u64, PgError> {
     let query_str = "\
     INSERT INTO drinks (name) VALUES ($1)";
     
@@ -124,16 +129,20 @@ pub async fn add_ingredients(client: &Client, drink_ingredient: DrinkIngredients
 pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<DrinkIngredients, PgError> {
     let query_str = "\
     SELECT \
-        d.drink_id, \
-        d.ingredient_id, \
+        dr.drink_id, \
+        dr.name, \
+        di.ingredient_id, \
         i.name, \
         i.abv, \
         i.carbonated, \
-        d.quantity \
-    FROM drink_ingredients as d \
-    INNER JOIN ingredients as i on d.ingredient_id = i.ingredient_id \
-    WHERE d.drink_id = $1 \
-    ORDER BY d.ingredient_id";
+        di.quantity \
+    FROM drinks as dr \
+    LEFT JOIN drink_ingredients AS di \
+        ON dr.drink_id = di.drink_id \
+    LEFT JOIN ingredients AS i \
+    ON di.ingredient_id = i.ingredient_id \
+    WHERE dr.drink_id = $1 \
+    ORDER BY dr.drink_id";
     
     let mut drink_ingredients: DrinkIngredients = DrinkIngredients {
         drink,
@@ -147,17 +156,23 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
         Err(e) => return Err(e)
     };
     for row in query {
-        let ingredient: Ingredient = Ingredient {
-            id: row.get(1),
-            name: row.get(2),
-            abv: row.get(3),
-            carbonated: row.get(4),
-        };
-        let ingredient_qty = IngredientQty {
-            ingredient,
-            quantity: row.get(5),
-        };
-        drink_ingredients.ingredients.push(ingredient_qty);
+        match row.try_get::<usize, i32>(2) {
+            Ok(_) => { 
+                drink_ingredients.ingredients.push(
+                    IngredientQty {
+                        ingredient: Ingredient {
+                            id: row.get(2),
+                            name: row.get(3),
+                            abv: row.get(4),
+                            carbonated: row.get(5),
+                        },
+                        quantity: row.get(6),
+                    }
+                )
+            },
+            Err(_) => {}
+        }
+        
     }
     Ok(drink_ingredients)
 }
@@ -165,18 +180,15 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
 pub async fn get_drinks_ingredients(client: &Client) -> Result<DrinksIngredients, PgError> {
     let mut drink_ingredients: Vec<DrinkIngredients> = Vec::new();
     let drinks = match get_drinks(&client).await {
-        Ok(drinks) if drinks.drinks.is_empty() => {
-            return Ok(DrinksIngredients { drink_ingredients }) 
-        },
         Ok(drinks) => drinks,
         Err(e) => return Err(e)
     };
-    
     for drink in drinks.drinks {
         let mut drinks_ingredient: DrinkIngredients = match get_drink_ingredients(&client, drink).await {
-            Ok(di) if di.ingredients.is_empty() => return Ok(DrinksIngredients {drink_ingredients}),
             Ok(di) => di,
-            Err(e) => return Err(e)
+            Err(e) => {
+                return Err(e) 
+            }
         };
         let ingr = drinks_ingredient
             .ingredients.iter();
@@ -187,4 +199,9 @@ pub async fn get_drinks_ingredients(client: &Client) -> Result<DrinksIngredients
         drink_ingredients.push(drinks_ingredient);
     }
     Ok(DrinksIngredients {drink_ingredients})
+}
+pub async fn delete_ingredient_from_drink(client: &Client, drink_id: i32, ingredient_id: i32) -> Result<u64, PgError> {
+    let query_str = "\
+    DELETE FROM drink_ingredients WHERE drink_id = $1 AND ingredient_id = $2";
+    client.execute(query_str, &[&drink_id, &ingredient_id]).await
 }
