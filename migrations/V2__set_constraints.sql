@@ -58,11 +58,6 @@ DROP CONSTRAINT IF EXISTS board_places_place_id_fkey,
 ADD CONSTRAINT board_places_place_id_fkey
     FOREIGN KEY (place_id)
     REFERENCES places(place_id)
-    ON DELETE CASCADE,
-DROP CONSTRAINT IF EXISTS board_places_next_fkey,
-ADD CONSTRAINT board_places_next_fkey
-    FOREIGN KEY (next)
-    REFERENCES board_places(place_number)
     ON DELETE CASCADE;
 
 ALTER TABLE penalties

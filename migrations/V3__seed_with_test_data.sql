@@ -72,18 +72,30 @@ INSERT INTO drink_ingredients (drink_id, ingredient_id, quantity) VALUES
                                 (25, 5, 33),
                                 (26, 16, 2),
                                 (26, 12, 2);
-INSERT INTO places (place_name, rule) VALUES ('Tietotien Metro'),
-                                             ('Normaali Ruutu'),
-                                             ('A-bloc'),
-                                             ('Raide Jokeri'),
-                                             ('Alvari'),
-                                             ('Olohuone'),
-                                             ('Database');
+INSERT INTO places (place_name, place_type) VALUES ('Tietotien Metro', 'special'),
+                                             ('Normaali Ruutu', 'normal'),
+                                             ('A-bloc', 'food'),
+                                             ('Raide Jokeri', 'special'),
+                                             ('Alvari', 'food'),
+                                             ('Olohuone', 'guild'),
+                                             ('Database', 'guild'),
+                                             ('testi-sauna', 'sauna');
 INSERT INTO board_places (board_id, place_number, place_id) VALUES
-                                                                      (1, 1, 1),
                                                                       (1, 2, 2),
                                                                       (1, 3, 2),
                                                                       (1, 4, 2),
                                                                       (1, 5, 3),
                                                                       (1, 6, 2),
-                                                                      (1, 7, 4);
+                                                                      (1, 7, 4),
+                                                                      (1, 8, 5),
+                                                                      (1, 9, 2),
+                                                                      (1, 10, 2),
+                                                                      (1, 11, 2),
+                                                                      (1, 12, 2),
+                                                                      (1, 13, 6),
+                                                                      (1, 14, 7),
+                                                                      (1, 15, 8);
+
+INSERT INTO board_places (board_id, place_number, place_id, start, "end") VALUES
+                                                                              (1, 1, 1, true, false),
+                                                                              (1, 16, 4, false, true);

@@ -1,3 +1,5 @@
+CREATE TYPE place_types AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
+
 CREATE TABLE IF NOT EXISTS boards (
     board_id        SERIAL PRIMARY KEY,
     name            TEXT
@@ -21,7 +23,8 @@ CREATE TABLE IF NOT EXISTS drinks (
 CREATE TABLE IF NOT EXISTS places (
     place_id        SERIAL PRIMARY KEY,
     place_name      TEXT,
-    rule            TEXT DEFAULT ''
+    rule            TEXT DEFAULT '',
+    place_type      place_types NOT NULL
 );
 CREATE TABLE IF NOT EXISTS ingredients (
     ingredient_id   SERIAL PRIMARY KEY,
@@ -63,6 +66,8 @@ CREATE TABLE IF NOT EXISTS board_places (
     place_id        INTEGER REFERENCES places(place_id),
     start           BOOLEAN default FALSE,
     "end"           BOOLEAN default FALSE,
+    x               FLOAT default 0.0,
+    y               FLOAT default 0.0,
     PRIMARY KEY (board_id, place_number)
 );
 CREATE TABLE IF NOT EXISTS place_drinks (

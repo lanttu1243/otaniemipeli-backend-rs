@@ -9,6 +9,7 @@ pub mod places;
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .nest("/places", places::router())
         .route("/{id}", get(boards_get_id))
         .route("/",
                get(boards_get))

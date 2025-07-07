@@ -170,7 +170,7 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
                     }
                 )
             },
-            Err(_) => {}
+            Err(e) => return Err(e)
         }
         
     }

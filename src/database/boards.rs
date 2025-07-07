@@ -1,4 +1,5 @@
 use deadpool_postgres::{Client};
+use crate::api::v1::boards::places;
 use crate::utils::state::AppError;
 use crate::utils::types::*;
 pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
@@ -22,6 +23,29 @@ pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
     }
     Ok(Boards {boards})
 }
+pub async fn get_places(client: &Client) -> Result<Places, PgError> {
+
+    let query_str = "\
+    SELECT place_id, name, place_type, rule FROM places;";
+
+    let mut places: Places = Places { places: Vec::new() };
+
+    let query = match client.query(query_str, &[]).await {
+        Ok(r) => r,
+        Err(e) => return Err(e),
+    };
+
+    for row in query {
+        let place: Place = Place {
+            place_id: row.get(0),
+            place_name: row.get(1),
+            place_type: row.get(2),
+            rule: row.get(3),
+        };
+        places.places.push(place);
+    }
+    Ok(places)
+}
 pub async fn get_board(client: &Client, board_id: i32) -> Result<Board, PgError> {
     let query_str = "\
     SELECT board_id, name FROM boards WHERE board_id = $1";
@@ -40,4 +64,65 @@ pub async fn get_board(client: &Client, board_id: i32) -> Result<Board, PgError>
         name: query.first().unwrap().get(1)
     })
     
+}
+
+pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPlaces, PgError> {
+    let board: Board = get_board(client, board_id).await?;
+    let mut board_places: BoardPlaces = BoardPlaces {
+        board,
+        places: vec![],
+    };
+    let query_str = "\
+    SELECT \
+        bp.board_id, \
+        p.place_id, \
+        p.place_name, \
+        p.rule, \
+        p.place_type, \
+        bp.place_number, \
+        bp.start,\
+        bp.end, \
+        bp.x, \
+        bp.y \
+    FROM board_places AS bp \
+    LEFT JOIN places AS p \
+        ON bp.place_id = p.place_id \
+    WHERE bp.board_id = $1 \
+    ORDER BY bp.place_number";
+
+    let query = match client.query(query_str, &[&board_id]).await {
+        Ok(r) => r,
+        Err(e) => return Err(e)
+    };
+    for row in query {
+        match row.try_get::<usize, i32>(0) {
+            Ok(_) => {
+                board_places.places.push(
+                    BoardPlace {
+                        board_id,
+                        place: Place {
+                            place_id: row.get(1),
+                            place_name: row.get(2),
+                            rule: row.get(3),
+                            place_type: row.get(4),
+                        },
+                        place_number: row.get(5),
+                        start: row.get(6),
+                        end: row.get(7),
+                        x: row.get(8),
+                        y: row.get(9),
+                    }
+                )
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(board_places)
+}
+pub async fn add_place(client: &Client, place: Place) -> Result<u64, PgError> {
+    let query_str = "\
+    INSERT INTO places (place_name, rule, place_type) \
+    VALUES ($1, $2, $3)";
+
+    client.execute(query_str, &[&place.place_name, &place.rule, &place.place_type]).await
 }
