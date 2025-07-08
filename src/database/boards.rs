@@ -26,7 +26,7 @@ pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
 pub async fn get_places(client: &Client) -> Result<Places, PgError> {
 
     let query_str = "\
-    SELECT place_id, name, place_type, rule FROM places;";
+    SELECT place_id, place_name, place_type, rule FROM places;";
 
     let mut places: Places = Places { places: Vec::new() };
 
@@ -125,4 +125,17 @@ pub async fn add_place(client: &Client, place: Place) -> Result<u64, PgError> {
     VALUES ($1, $2, $3)";
 
     client.execute(query_str, &[&place.place_name, &place.rule, &place.place_type]).await
+}
+pub async fn add_board_place(client: &Client, board_id: i32, place: BoardPlace) -> Result<u64, PgError> {
+    let query_str = "\
+    INSERT INTO board_places (board_id, place_number, place_id, start, \"end\", x, y) \
+    VALUES ($1, $2, $3, $4, $5, $6, $7)";
+
+    client.execute(query_str, &[&board_id, &place.place_number, &place.place.place_id, &place.start, &place.end, &place.x, &place.y] ).await
+}
+pub async fn update_coordinates(client: &Client, board_id: i32, place: &BoardPlace) -> Result<u64, PgError> {
+    let query_str = "\
+    UPDATE board_places SET x = $1, y = $2 WHERE board_id = $3 AND place_number = $4";
+
+    client.execute(query_str, &[&place.x, &place.y, &board_id, &place.place_number]).await
 }

@@ -1,27 +1,26 @@
-use axum::extract::{Path, Query, State};
-use axum::Json;
+use axum::extract::{Path, State};
+use axum::{Json as AxumJson};
 use deadpool_postgres::Client;
-use crate::database::boards::{add_place, get_board_places, get_places};
-use crate::database::drinks::post_drink;
+use crate::database::boards::{add_place, get_board_places, get_places, update_coordinates};
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Board, BoardPlaces, Drink, Place, Places};
+use crate::utils::types::{Board, BoardPlace, BoardPlaces, Place, Places};
 
 pub async fn board_places_get(
     Path(board_id): Path<i32>,
     state: State<AppState>,
-) -> Result<Json<BoardPlaces>, AppError> {
+) -> Result<AxumJson<BoardPlaces>, AppError> {
     println!("GET /boards/places/{board_id}");
 
     let client: Client = state.db.get().await?;
     match get_board_places(&client, board_id).await {
-        Ok(places) => Ok(Json(places)),
+        Ok(places) => Ok(AxumJson(places)),
         Err(_) => Err(AppError::Database("Error getting places!".to_string())),
     }
 }
 pub async fn places_post(
     state: State<AppState>,
-    Json(place): Json<Place>,
-) -> Result<Json<Place>, AppError> {
+    AxumJson(place): AxumJson<Place>,
+) -> Result<AxumJson<Place>, AppError> {
     println!("POST /boards/places");
 
     let client: Client = state.db.get().await?;
@@ -30,17 +29,30 @@ pub async fn places_post(
             eprintln!("{}", e);
             Err(AppError::Database("Database operations encountered an error!".parse().unwrap()))
         },
-        _ => Ok(Json(place))
+        _ => Ok(AxumJson(place))
     }
 }
 pub async fn places_get(
     state: State<AppState>
-) -> Result<Json<Places>, AppError> {
+) -> Result<AxumJson<Places>, AppError> {
     println!("GET /boards/places");
 
     let client: Client = state.db.get().await?;
     match get_places(&client).await {
-        Ok(places) => Ok(Json(places)),
+        Ok(places) => Ok(AxumJson(places)),
         Err(_) => Err(AppError::Database("Error getting places!".to_string())),
+    }
+}
+pub async fn coordinate_patch(
+    Path(board_id): Path<i32>,
+    state: State<AppState>,
+    AxumJson(place): AxumJson<BoardPlace>,
+) -> Result<AxumJson<u64>, AppError> {
+    println!("PATCH /boards/places/{board_id}");
+
+    let client: Client = state.db.get().await?;
+    match update_coordinates(&client, board_id, &place).await {
+        Ok(x) => Ok(AxumJson(x)),
+        Err(_) => Err(AppError::Database("Database operations encountered an error!".to_string())),
     }
 }
