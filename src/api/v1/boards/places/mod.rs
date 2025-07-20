@@ -6,6 +6,8 @@ use crate::utils::state::AppState;
 pub mod utils;
 use self::utils::*;
 
+pub mod drinks;
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(places_get)
@@ -13,4 +15,5 @@ pub fn router() -> Router<AppState> {
         .route("/{board_id}/coordinate", patch(coordinate_patch))
         .route("/{id}", get(board_places_get)
             .post(board_place_post))
+        .nest("/drinks", drinks::router())
 }

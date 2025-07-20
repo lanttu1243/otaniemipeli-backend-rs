@@ -140,7 +140,7 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
     LEFT JOIN drink_ingredients AS di \
         ON dr.drink_id = di.drink_id \
     LEFT JOIN ingredients AS i \
-    ON di.ingredient_id = i.ingredient_id \
+        ON di.ingredient_id = i.ingredient_id \
     WHERE dr.drink_id = $1 \
     ORDER BY dr.drink_id";
     
@@ -170,7 +170,7 @@ pub async fn get_drink_ingredients(client: &Client, drink: Drink) -> Result<Drin
                     }
                 )
             },
-            Err(e) => return Err(e)
+            Err(_) => continue
         }
         
     }

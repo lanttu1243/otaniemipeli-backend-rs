@@ -1,6 +1,4 @@
 use deadpool_postgres::{Client};
-use crate::api::v1::boards::places;
-use crate::utils::state::AppError;
 use crate::utils::types::*;
 pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
 
@@ -111,13 +109,114 @@ pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPla
                         end: row.get(7),
                         x: row.get(8),
                         y: row.get(9),
+                        connections: match get_board_place_connections(&client, board_id, row.get(5)).await {
+                            Ok(r) => r,
+                            Err(e) => return Err(e),
+                        },
+                        drinks: {
+                            match get_place_drinks(&client, row.get(1)).await {
+                                Ok(r) => r,
+                                Err(e) => return Err(e),
+                            }
+                        }
+                    }
+                )
+            }
+            Err(_) => continue,
+        }
+    }
+    Ok(board_places)
+}
+pub async fn get_place_drinks(client: &Client, place_id: i32) -> Result<PlaceDrinks, PgError> {
+    let mut drinks: PlaceDrinks = PlaceDrinks { drinks: Vec::new() };
+    let query_str = "\
+    SELECT \
+        pd.place_id, \
+        pd.drink_id, \
+        d.name, \
+        pd.refill, \
+        pd.optional, \
+        pd.n, \
+        pd.n_update \
+    FROM place_drinks AS pd \
+    LEFT JOIN drinks AS d \
+        ON d.drink_id = pd.drink_id \
+    WHERE place_id = $1";
+
+    let query = match client.query(query_str, &[&place_id]).await {
+        Ok(r) => r,
+        Err(e) => return Err(e)
+    };
+
+    for row in query {
+        match row.try_get::<usize, i32>(0) {
+            Ok(_) => {
+                drinks.drinks.push(
+                    PlaceDrink {
+                        place_id: row.get(0),
+                        drink: Drink {
+                            id: row.get(1),
+                            name: row.get(2),
+                        },
+                        refill: row.get(3),
+                        optional: row.get(4),
+                        n: row.get(5),
+                        n_update: row.get(6),
+                    }
+                )
+            }
+            Err(_) => continue,
+        }
+    }
+    Ok(drinks)
+}
+pub async fn add_place_drinks(client: &Client, drinks: PlaceDrinks) -> Result<u64, PgError> {
+
+    let query_str = "\
+    INSERT INTO place_drinks (drink_id, place_id, refill, optional, n)\
+    VALUES ($1, $2, $3, $4, $5)";
+
+    for drink in &drinks.drinks {
+        client.execute(query_str, &[&drink.drink.id, &drink.place_id, &drink.refill, &drink.optional, &drink.n]).await?;
+    }
+    Ok(drinks.drinks.len() as u64)
+}
+pub async fn get_board_place_connections(client: &Client, board_id: i32, place_number: i32) -> Result<Vec<Connection>, PgError> {
+    let mut connections: Vec<Connection> = Vec::new();
+    let query_str = "\
+    SELECT \
+        board_id, \
+        origin, \
+        target, \
+        on_land, \
+        backwards, \
+        dashed \
+    FROM place_connections \
+    WHERE board_id = $1  AND origin = $2 \
+    ORDER BY target";
+
+    let query = match client.query(query_str, &[&board_id, &place_number]).await {
+        Ok(r) => r,
+        Err(e) => return Err(e)
+    };
+    for row in query {
+        match row.try_get::<usize, i32>(0) {
+            Ok(_) => {
+                connections.push(
+                    Connection {
+                        board_id: row.get(0),
+                        origin: row.get(1),
+                        target: row.get(2),
+                        on_land: row.get(3),
+                        backwards: row.get(4),
+                        dashed: row.get(5),
                     }
                 )
             }
             Err(e) => return Err(e),
         }
     }
-    Ok(board_places)
+    Ok(connections)
 }
 pub async fn add_place(client: &Client, place: Place) -> Result<u64, PgError> {
     let query_str = "\

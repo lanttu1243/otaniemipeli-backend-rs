@@ -67,6 +67,30 @@ pub struct BoardPlace {
     pub end: bool,
     pub x: f64,
     pub y: f64,
+    pub connections: Vec<Connection>,
+    pub drinks: PlaceDrinks
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PlaceDrinks {
+    pub drinks: Vec <PlaceDrink>
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PlaceDrink {
+    pub place_id: i32,
+    pub drink: Drink,
+    pub refill: bool,
+    pub optional: bool,
+    pub n: i32,
+    pub n_update: String,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Connection {
+    pub board_id: i32,
+    pub origin: i32,
+    pub target: i32,
+    pub on_land: bool,
+    pub backwards: bool,
+    pub dashed: bool,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Ingredient {
