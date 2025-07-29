@@ -114,7 +114,7 @@ pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPla
                             Err(e) => return Err(e),
                         },
                         drinks: {
-                            match get_place_drinks(&client, row.get(1)).await {
+                            match get_place_drinks(&client, row.get(5), board_id).await {
                                 Ok(r) => r,
                                 Err(e) => return Err(e),
                             }
@@ -127,11 +127,12 @@ pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPla
     }
     Ok(board_places)
 }
-pub async fn get_place_drinks(client: &Client, place_id: i32) -> Result<PlaceDrinks, PgError> {
+pub async fn get_place_drinks(client: &Client, place_number: i32, board_id: i32) -> Result<PlaceDrinks, PgError> {
     let mut drinks: PlaceDrinks = PlaceDrinks { drinks: Vec::new() };
     let query_str = "\
     SELECT \
-        pd.place_id, \
+        pd.place_number, \
+        pd.board_id, \
         pd.drink_id, \
         d.name, \
         pd.refill, \
@@ -141,9 +142,9 @@ pub async fn get_place_drinks(client: &Client, place_id: i32) -> Result<PlaceDri
     FROM place_drinks AS pd \
     LEFT JOIN drinks AS d \
         ON d.drink_id = pd.drink_id \
-    WHERE place_id = $1";
+    WHERE pd.place_number = $1 AND pd.board_id = $2";
 
-    let query = match client.query(query_str, &[&place_id]).await {
+    let query = match client.query(query_str, &[&place_number, &board_id]).await {
         Ok(r) => r,
         Err(e) => return Err(e)
     };
@@ -153,15 +154,16 @@ pub async fn get_place_drinks(client: &Client, place_id: i32) -> Result<PlaceDri
             Ok(_) => {
                 drinks.drinks.push(
                     PlaceDrink {
-                        place_id: row.get(0),
+                        place_number: row.get(0),
+                        board_id: row.get(1),
                         drink: Drink {
-                            id: row.get(1),
-                            name: row.get(2),
+                            id: row.get(2),
+                            name: row.get(3),
                         },
-                        refill: row.get(3),
-                        optional: row.get(4),
-                        n: row.get(5),
-                        n_update: row.get(6),
+                        refill: row.get(4),
+                        optional: row.get(5),
+                        n: row.get(6),
+                        n_update: row.get(7),
                     }
                 )
             }
@@ -173,11 +175,11 @@ pub async fn get_place_drinks(client: &Client, place_id: i32) -> Result<PlaceDri
 pub async fn add_place_drinks(client: &Client, drinks: PlaceDrinks) -> Result<u64, PgError> {
 
     let query_str = "\
-    INSERT INTO place_drinks (drink_id, place_id, refill, optional, n)\
-    VALUES ($1, $2, $3, $4, $5)";
+    INSERT INTO place_drinks (drink_id, place_number, board_id, refill, optional, n)\
+    VALUES ($1, $2, $3, $4, $5, $6)";
 
     for drink in &drinks.drinks {
-        client.execute(query_str, &[&drink.drink.id, &drink.place_id, &drink.refill, &drink.optional, &drink.n]).await?;
+        client.execute(query_str, &[&drink.drink.id, &drink.place_number, &drink.board_id, &drink.refill, &drink.optional, &drink.n]).await?;
     }
     Ok(drinks.drinks.len() as u64)
 }

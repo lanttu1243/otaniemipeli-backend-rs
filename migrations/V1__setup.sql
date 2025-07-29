@@ -72,11 +72,13 @@ CREATE TABLE board_places (
 );
 CREATE TABLE place_drinks (
     drink_id        INTEGER REFERENCES drinks(drink_id),
-    place_id        INTEGER REFERENCES places(place_id),
+    place_number    INTEGER REFERENCES board_places(place_number),
+    board_id        INTEGER REFERENCES boards(board_id),
     refill          BOOLEAN default FALSE,
     optional        BOOLEAN default FALSE,
     n               INTEGER default 1,
-    n_update        TEXT default ''
+    n_update        TEXT default '',
+    PRIMARY KEY (drink_id, place_number, board_id)
 );
 CREATE TABLE place_connections (
     board_id        INTEGER REFERENCES boards(board_id),

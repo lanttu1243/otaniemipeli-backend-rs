@@ -3,13 +3,13 @@ use axum::{Json as AxumJson};
 use deadpool_postgres::Client;
 use crate::database::boards::{add_place_drinks};
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{BoardPlace, PlaceDrinks};
+use crate::utils::types::{PlaceDrinks};
 
 pub async fn post_place_drinks(
     state: State<AppState>,
     AxumJson(place_drinks): AxumJson<PlaceDrinks>,
 ) -> Result<AxumJson<u64>, AppError> {
-    println!("PATCH /boards/places/drinks");
+    println!("POST /boards/places/drinks");
 
     let client: Client = state.db.get().await?;
     match add_place_drinks(&client, place_drinks).await {

@@ -76,7 +76,8 @@ pub struct PlaceDrinks {
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PlaceDrink {
-    pub place_id: i32,
+    pub place_number: i32,
+    pub board_id: i32,
     pub drink: Drink,
     pub refill: bool,
     pub optional: bool,

@@ -83,11 +83,16 @@ ADD CONSTRAINT place_drinks_drink_id_fkey
     FOREIGN KEY (drink_id)
     REFERENCES drinks(drink_id)
     ON DELETE CASCADE,
-DROP CONSTRAINT IF EXISTS place_drinks_place_id_fkey,
-ADD CONSTRAINT place_drinks_place_id_fkey
-    FOREIGN KEY (place_id)
-    REFERENCES places(place_id)
-    ON DELETE CASCADE;
+DROP CONSTRAINT IF EXISTS place_drinks_place_number_fkey,
+ADD CONSTRAINT place_drinks_place_number_fkey
+    FOREIGN KEY (place_number)
+    REFERENCES board_places(place_number)
+    ON DELETE CASCADE,
+DROP CONSTRAINT IF EXISTS place_drinks_board_id_fkey,
+ADD CONSTRAINT place_drinks_board_id_fkey
+    FOREIGN KEY (board_id)
+        REFERENCES boards(board_id)
+        ON DELETE CASCADE;
 
 ALTER TABLE place_connections
 DROP CONSTRAINT IF EXISTS place_connections_board_id_fkey,
