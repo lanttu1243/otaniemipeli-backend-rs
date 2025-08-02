@@ -21,7 +21,8 @@ insert into ingredients (name, abv, carbonated) values        ('Kalja', 4.7, tru
                                                               ('Absintti', 66.0, false),
                                                               ('Mehukatti', 0.0, false),
                                                               ('Salmari', 32.0, false),
-                                                              ('Banaanilikööri', 20.0, false);
+                                                              ('Banaanilikööri', 20.0, false),
+                                                              ('Hauki', 20.0, false);
 INSERT INTO drinks (name) VALUES ('Kalja'), ('AS-huikka'), ('Slime'),
                               ('Terästetty Kokis'), ('Siideri'),
                               ('Punaviini'), ('Tequila'),
@@ -32,7 +33,8 @@ INSERT INTO drinks (name) VALUES ('Kalja'), ('AS-huikka'), ('Slime'),
                               ('Jallu'), ('Trocadero'),
                               ('Terästetty Trocadero'), ('Absintti'),
                               ('Pöhkötaksi'), ('Apoptoosi'),
-                              ('Lonkero'), ('Kokis'), ('Varasto');
+                              ('Lonkero'), ('Kokis'), ('Varasto'),
+                              ('Hauki');
 INSERT INTO drink_ingredients (drink_id, ingredient_id, quantity) VALUES
                                 (1, 1, 33),
                                 (2, 1, 11),
@@ -71,7 +73,8 @@ INSERT INTO drink_ingredients (drink_id, ingredient_id, quantity) VALUES
                                 (24, 10, 33),
                                 (25, 5, 33),
                                 (26, 16, 2),
-                                (26, 12, 2);
+                                (26, 12, 2),
+                                (27, 24, 4);
 
 INSERT INTO places (place_name, rule, place_type) VALUES
                                                                        ('Metroasema', 'Kaikki joukkueet aloittavat pelin Tietotien metroaseman luona olevalta pysäkiltä. Jokainen joukkue juo tuomarin päätöksen mukaisen määrän tuomarin päättämää juomaa.', 'special'),
@@ -139,7 +142,6 @@ COPY public.board_places (board_id, place_number, place_id, start, "end", x, y) 
 1	55	37	f	f	76.60000000000008	76.60000000000004
 1	68	44	f	t	40.2	69.60000000000005
 1	69	51	f	f	5.6	82.59999999999995
-1	70	2	f	f	9.400000000000004	81.19999999999999
 1	71	5	f	f	11.799999999999995	74.4
 1	72	2	f	f	12.6	64.2
 1	6	4	f	f	60.2	91
@@ -219,32 +221,200 @@ COPY public.board_places (board_id, place_number, place_id, start, "end", x, y) 
 1	87	49	f	f	46.4	3.9999999999999982
 1	88	2	f	f	46.200000000000024	20.99999999999999
 1	89	2	f	f	41.40000000000004	8.000000000000014
+1	70	2	f	f	8.400000000000007	77.39999999999993
 \.
-INSERT INTO place_connections (board_id, origin, target) VALUES
-                                                        (1,  0,  1), (1,  1,  2), (1,  2,  3), (1,  3,  4),
-                                                        (1,  4,  5), (1,  5,  6), (1,  6,  7), (1,  7,  8),
-                                                        (1,  8,  9), (1,  9, 10), (1, 10, 11), (1, 11, 12),
-                                                        (1, 12, 13), (1, 13, 14), (1, 14, 15), (1, 15, 16),
-                                                        (1, 16, 17), (1, 17, 18), (1, 18, 19), (1, 19, 20),
-                                                        (1, 20, 21), (1, 21, 22), (1, 22, 23), (1, 23, 24),
-                                                        (1, 24, 25), (1, 25, 26), (1, 26, 27), (1, 27, 28),
-                                                        (1, 28, 29), (1, 29, 30), (1, 30, 31), (1, 31, 32),
-                                                        (1, 32, 33), (1, 33, 34), (1, 34, 35), (1, 35, 36),
-                                                        (1, 36, 37), (1, 37, 38), (1, 38, 39), (1, 39, 40),
-                                                        (1, 40, 41), (1, 41, 42), (1, 42, 43), (1, 43, 44),
-                                                        (1, 44, 45), (1, 45, 46), (1, 46, 47), (1, 47, 48),
-                                                        (1, 48, 49), (1, 49, 50), (1, 50, 51), (1, 51, 52),
-                                                        (1, 52, 53), (1, 53, 54), (1, 54, 55), (1, 55, 56),
-                                                        (1, 56, 57), (1, 57, 58), (1, 58, 59), (1, 59, 60),
-                                                        (1, 60, 61), (1, 61, 62), (1, 62, 63), (1, 63, 64),
-                                                        (1, 64, 65), (1, 65, 66), (1, 66, 67), (1, 67, 68),
-                                                        (1, 69, 70), (1, 70, 71), (1, 71, 72),
-                                                        (1, 72, 73), (1, 73, 74), (1, 74, 75), (1, 75, 76),
-                                                        (1, 76, 77), (1, 77, 78), (1, 78, 16), (1, 79, 80),
-                                                        (1, 80, 81), (1, 81, 82), (1, 82, 83), (1, 83, 84),
-                                                        (1, 84, 85), (1, 85, 86), (1, 86, 87), (1, 87, 88),
-                                                        (1, 88, 89), (1, 89, 90), (1, 90, 91);
-INSERT INTO place_connections (board_id, origin, target, on_land, dashed, backwards) VALUES
-    (1, 31, 79, true, true, false),
-    (1, 6, 69, true, true, false),
-    (1, 91, 45, true, true, false);
+COPY public.place_connections (board_id, origin, target, on_land, backwards, dashed) FROM stdin;
+1	0	1	f	f	f
+1	1	2	f	f	f
+1	2	3	f	f	f
+1	3	4	f	f	f
+1	4	5	f	f	f
+1	5	6	f	f	f
+1	6	7	f	f	f
+1	7	8	f	f	f
+1	8	9	f	f	f
+1	9	10	f	f	f
+1	10	11	f	f	f
+1	11	12	f	f	f
+1	12	13	f	f	f
+1	13	14	f	f	f
+1	14	15	f	f	f
+1	15	16	f	f	f
+1	16	17	f	f	f
+1	17	18	f	f	f
+1	18	19	f	f	f
+1	19	20	f	f	f
+1	20	21	f	f	f
+1	21	22	f	f	f
+1	22	23	f	f	f
+1	23	24	f	f	f
+1	24	25	f	f	f
+1	25	26	f	f	f
+1	26	27	f	f	f
+1	27	28	f	f	f
+1	28	29	f	f	f
+1	29	30	f	f	f
+1	30	31	f	f	f
+1	31	32	f	f	f
+1	32	33	f	f	f
+1	33	34	f	f	f
+1	34	35	f	f	f
+1	35	36	f	f	f
+1	36	37	f	f	f
+1	37	38	f	f	f
+1	38	39	f	f	f
+1	39	40	f	f	f
+1	40	41	f	f	f
+1	41	42	f	f	f
+1	42	43	f	f	f
+1	43	44	f	f	f
+1	44	45	f	f	f
+1	45	46	f	f	f
+1	46	47	f	f	f
+1	47	48	f	f	f
+1	48	49	f	f	f
+1	49	50	f	f	f
+1	50	51	f	f	f
+1	51	52	f	f	f
+1	52	53	f	f	f
+1	53	54	f	f	f
+1	54	55	f	f	f
+1	55	56	f	f	f
+1	56	57	f	f	f
+1	57	58	f	f	f
+1	58	59	f	f	f
+1	59	60	f	f	f
+1	60	61	f	f	f
+1	61	62	f	f	f
+1	62	63	f	f	f
+1	63	64	f	f	f
+1	64	65	f	f	f
+1	65	66	f	f	f
+1	66	67	f	f	f
+1	67	68	f	f	f
+1	69	70	f	f	f
+1	70	71	f	f	f
+1	71	72	f	f	f
+1	72	73	f	f	f
+1	73	74	f	f	f
+1	74	75	f	f	f
+1	75	76	f	f	f
+1	76	77	f	f	f
+1	77	78	f	f	f
+1	78	16	f	f	f
+1	79	80	f	f	f
+1	80	81	f	f	f
+1	81	82	f	f	f
+1	82	83	f	f	f
+1	83	84	f	f	f
+1	84	85	f	f	f
+1	85	86	f	f	f
+1	86	87	f	f	f
+1	87	88	f	f	f
+1	88	89	f	f	f
+1	89	90	f	f	f
+1	90	91	f	f	f
+1	31	79	t	f	t
+1	6	69	t	f	t
+1	91	45	t	f	t
+\.
+
+COPY public.place_drinks (drink_id, place_number, board_id, refill, optional, n, n_update) FROM stdin;
+26	39	1	t	f	1	1
+1	1	1	f	f	1	1
+1	2	1	f	f	1	1
+1	3	1	f	f	1	1
+1	5	1	f	f	1	1
+1	8	1	f	f	1	1
+1	9	1	f	f	1	1
+1	10	1	f	f	1	1
+1	11	1	f	f	1	1
+1	14	1	f	f	1	1
+9	15	1	t	f	1	1
+13	16	1	t	f	1	1
+20	13	1	t	t	1	1
+19	13	1	t	t	1	1
+7	12	1	t	f	1	1
+3	7	1	t	f	1	1
+3	4	1	t	f	1	1
+2	17	1	t	f	1	1
+3	18	1	t	f	1	1
+3	19	1	t	f	1	1
+1	20	1	f	f	1	1
+1	22	1	f	f	1	1
+12	23	1	t	f	1	1
+1	24	1	t	f	1	N+1
+1	25	1	t	f	1	MIN(D2)
+1	26	1	f	f	1	1
+1	27	1	f	f	1	1
+16	28	1	t	f	1	1
+1	29	1	f	f	1	1
+3	30	1	t	f	1	1
+1	31	1	t	t	1	1
+25	31	1	t	t	1	1
+6	31	1	t	t	1	1
+5	31	1	t	t	1	1
+27	32	1	t	f	1	1
+1	33	1	f	f	1	1
+1	34	1	f	f	1	1
+1	35	1	f	f	1	1
+1	37	1	f	f	1	1
+1	38	1	f	f	1	1
+11	36	1	t	f	1	1
+6	41	1	t	f	1	1
+1	42	1	f	f	1	1
+1	43	1	t	f	1	1
+1	44	1	t	f	1	1
+3	45	1	t	f	1	1
+1	45	1	t	f	1	1
+1	46	1	t	f	1	1
+1	47	1	f	f	1	1
+1	48	1	t	f	1	1
+8	49	1	t	f	1	1
+1	50	1	t	f	1	1
+1	51	1	t	f	1	1
+1	52	1	f	f	1	1
+1	53	1	f	f	3	1
+3	54	1	t	f	1	1
+3	55	1	t	f	1	1
+1	56	1	f	f	1	1
+1	58	1	t	f	1	1
+3	58	1	t	f	1	1
+3	57	1	t	f	1	1
+1	60	1	f	f	1	1
+1	61	1	f	f	1	1
+22	62	1	t	f	1	1
+23	63	1	t	f	1	1
+14	64	1	t	f	1	1
+1	65	1	f	f	1	1
+1	66	1	f	f	1	1
+1	67	1	f	f	1	1
+3	69	1	t	f	1	1
+1	70	1	f	f	1	1
+21	71	1	t	f	1	1
+1	72	1	f	f	1	1
+1	73	1	f	f	1	1
+1	74	1	f	f	1	1
+18	75	1	t	f	1	1
+1	76	1	f	f	1	1
+17	77	1	t	f	1	1
+1	78	1	f	f	1	1
+1	79	1	f	f	1	1
+6	80	1	t	f	1	1
+1	81	1	f	f	1	1
+1	82	1	t	f	1	1
+1	83	1	f	f	1	1
+25	84	1	t	t	1	1
+4	84	1	t	t	1	1
+1	85	1	t	f	3	1
+3	85	1	t	f	1	1
+1	86	1	f	f	1	1
+24	87	1	t	f	1	1
+1	88	1	f	f	1	1
+1	89	1	f	f	1	1
+1	90	1	f	f	1	1
+1	91	1	t	t	1	1
+25	91	1	t	t	1	1
+6	91	1	t	t	1	1
+5	91	1	t	t	1	1
+\.

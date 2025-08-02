@@ -175,11 +175,11 @@ pub async fn get_place_drinks(client: &Client, place_number: i32, board_id: i32)
 pub async fn add_place_drinks(client: &Client, drinks: PlaceDrinks) -> Result<u64, PgError> {
 
     let query_str = "\
-    INSERT INTO place_drinks (drink_id, place_number, board_id, refill, optional, n)\
-    VALUES ($1, $2, $3, $4, $5, $6)";
+    INSERT INTO place_drinks (drink_id, place_number, board_id, refill, optional, n, n_update) \
+    VALUES ($1, $2, $3, $4, $5, $6, $7)";
 
     for drink in &drinks.drinks {
-        client.execute(query_str, &[&drink.drink.id, &drink.place_number, &drink.board_id, &drink.refill, &drink.optional, &drink.n]).await?;
+        client.execute(query_str, &[&drink.drink.id, &drink.place_number, &drink.board_id, &drink.refill, &drink.optional, &drink.n, &drink.n_update]).await?;
     }
     Ok(drinks.drinks.len() as u64)
 }
