@@ -11,4 +11,5 @@ pub fn router() -> Router<AppState> {
         .merge(ingredients::router())
         .nest("/drinks", drinks::router())
         .nest("/boards", boards::router())
+        .nest("/games", games::router())
 }

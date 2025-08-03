@@ -18,7 +18,7 @@ pub async fn games_get(
     }
 }
 
-pub async fn drinks_post(
+pub async fn games_post(
     state: State<AppState>,
     Json(game): Json<PostGame>,
 ) -> Result<Json<PostGame>, AppError> {

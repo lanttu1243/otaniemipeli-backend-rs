@@ -1,4 +1,5 @@
 CREATE TYPE place_types AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
+CREATE TYPE user_types AS ENUM ('admin', 'ie', 'referee');
 
 CREATE TABLE boards (
     board_id        SERIAL PRIMARY KEY,
@@ -13,8 +14,15 @@ CREATE TABLE games (
 );
 CREATE TABLE teams (
     team_id         SERIAL PRIMARY KEY,
-    game_id            INTEGER REFERENCES games(game_id),
-    name            TEXT
+    game_id         INTEGER REFERENCES games(game_id),
+    team_name            TEXT,
+    team_hash       TEXT
+);
+CREATE TABLE users (
+    uid             SERIAL PRIMARY KEY,
+    username        TEXT,
+    password        TEXT,
+    user_type            user_types
 );
 CREATE TABLE drinks (
     drink_id        SERIAL PRIMARY KEY,
