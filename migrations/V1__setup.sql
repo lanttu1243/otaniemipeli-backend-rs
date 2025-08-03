@@ -20,7 +20,7 @@ CREATE TABLE teams (
 );
 CREATE TABLE users (
     uid             SERIAL PRIMARY KEY,
-    username        TEXT,
+    username        TEXT UNIQUE,
     password        TEXT,
     user_type            user_types
 );
