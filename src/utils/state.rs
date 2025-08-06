@@ -36,6 +36,8 @@ pub enum AppError {
     RateLimited,
     #[error("internal error")]
     Internal,
+    #[error("unauthorized: {0}")]
+    Unauthorized(String),
 }
 
 impl IntoResponse for AppError {
@@ -47,6 +49,7 @@ impl IntoResponse for AppError {
             AppError::NotFound(m)     => (StatusCode::NOT_FOUND, m),
             AppError::RateLimited     => (StatusCode::TOO_MANY_REQUESTS, "too many requests".into()),
             AppError::Internal        => (StatusCode::INTERNAL_SERVER_ERROR, "internal server error".into()),
+            AppError::Unauthorized(m) => (StatusCode::UNAUTHORIZED, m),
         };
         (status, Json(ErrorBody { error: msg })).into_response()
     }

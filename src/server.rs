@@ -1,5 +1,6 @@
 use std::env;
 use crate::api::router as api_router;
+use crate::login::router as login_router;
 use crate::database::utils::make_pool;
 use tokio::{
     net::TcpListener,
@@ -38,6 +39,7 @@ pub async fn start() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
+        .nest("/login", login_router())
         .nest("/api", api_router())
         .with_state(state);
 

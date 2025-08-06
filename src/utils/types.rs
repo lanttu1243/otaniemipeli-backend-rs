@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::types::{FromSql, ToSql};
 pub type PgError = tokio_postgres::error::Error;
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
-#[postgres(name = "place_types")]
+#[postgres(name = "place_type")]
 #[derive(PartialEq, Eq)]
 pub enum PlaceType {
     #[postgres(name = "normal")]
@@ -16,7 +16,34 @@ pub enum PlaceType {
     #[postgres(name = "guild")]
     guild,
 }
+#[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
+#[postgres(name = "user_type")]
+#[derive(PartialEq, Eq)]
+pub enum UserType {
+    #[postgres(name = "admin")]
+    admin,
+    #[postgres(name = "ie")]
+    ie,
+    #[postgres(name = "referee")]
+    referee,
+    #[postgres(name = "secretary")]
+    secretary,
+    #[postgres(name = "team")]
+    team,
+}
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct LoginInfo {
+    pub username: String,
+    pub password: String,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserInfo {
+    pub uid: i32,
+    pub username: String,
+    pub email: String,
+    pub user_types: Vec<UserType>,
+}
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameInfo {
     pub id: i32,
@@ -137,11 +164,6 @@ pub struct ResultIntJson {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Drinks {
     pub drinks: Vec<Drink>,
-}
-
-#[derive(Deserialize)]
-pub struct IngredientsQuery {
-    pub with_ingredients: bool,
 }
 
 #[derive(Deserialize)]

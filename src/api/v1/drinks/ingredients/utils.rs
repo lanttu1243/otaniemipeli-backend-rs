@@ -3,7 +3,7 @@ use axum::Json;
 use deadpool_postgres::Client;
 use crate::database::drinks::*;
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Drink, DrinkIngredients, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery, IngredientsQuery};
+use crate::utils::types::{Drink, DrinkIngredients, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery};
 
 pub async fn drinks_ingredients_get(
     state: State<AppState>,

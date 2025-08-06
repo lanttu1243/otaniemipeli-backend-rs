@@ -1,5 +1,5 @@
-CREATE TYPE place_types AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
-CREATE TYPE user_types AS ENUM ('admin', 'ie', 'referee');
+CREATE TYPE place_type AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
+CREATE TYPE user_type AS ENUM ('admin', 'ie', 'referee', 'secretary', 'team');
 
 CREATE TABLE boards (
     board_id        SERIAL PRIMARY KEY,
@@ -15,14 +15,18 @@ CREATE TABLE games (
 CREATE TABLE teams (
     team_id         SERIAL PRIMARY KEY,
     game_id         INTEGER REFERENCES games(game_id),
-    team_name            TEXT,
+    team_name       TEXT,
     team_hash       TEXT
 );
 CREATE TABLE users (
     uid             SERIAL PRIMARY KEY,
-    username        TEXT UNIQUE,
-    password        TEXT,
-    user_type            user_types
+    username        TEXT UNIQUE NOT NULL,
+    email           TEXT UNIQUE NOT NULL,
+    password        TEXT
+);
+CREATE TABLE sessions (
+    session_id      TEXT UNIQUE NOT NULL PRIMARY KEY,
+    uid             INTEGER
 );
 CREATE TABLE drinks (
     drink_id        SERIAL PRIMARY KEY,
@@ -32,7 +36,7 @@ CREATE TABLE places (
     place_id        SERIAL PRIMARY KEY,
     place_name      TEXT,
     rule            TEXT DEFAULT '',
-    place_type      place_types NOT NULL
+    place_type      place_type NOT NULL
 );
 CREATE TABLE ingredients (
     ingredient_id   SERIAL PRIMARY KEY,
@@ -96,4 +100,9 @@ CREATE TABLE place_connections (
     backwards       BOOLEAN default FALSE,
     dashed          BOOLEAN default FALSE,
     PRIMARY KEY (board_id, origin, target)
+);
+CREATE TABLE user_types (
+    uid             INTEGER REFERENCES users(uid),
+    user_type       user_type NOT NULL,
+    PRIMARY KEY (uid, user_type)
 );

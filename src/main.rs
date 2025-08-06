@@ -8,6 +8,7 @@ mod server;
 mod api;
 mod utils;
 mod database;
+mod login;
 
 #[tokio::main]
 async fn main() {

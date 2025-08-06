@@ -14,7 +14,7 @@ services:
       - .env
 
   database-migrations:
-    image: flyway/flyway:11
+    image: flyway/flyway:11.10.5-alpine
     env_file:
       - .env
     depends_on:

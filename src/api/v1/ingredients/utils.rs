@@ -1,9 +1,9 @@
-use axum::extract::{Path, State, Query};
+use axum::extract::{Path, State};
 use axum::Json;
 use deadpool_postgres::Client;
 use crate::database::drinks::*;
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Ingredient, Ingredients, IngredientsQuery};
+use crate::utils::types::{Ingredient, Ingredients};
 
 pub async fn ingredients_get(
     state: State<AppState>
