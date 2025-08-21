@@ -7,7 +7,7 @@ CREATE TABLE boards (
 );
 CREATE TABLE games (
     game_id         SERIAL PRIMARY KEY,
-    date            DATE DEFAULT CURRENT_TIMESTAMP,
+    date            TIMESTAMPTZ NOT NULL DEFAULT now(),
     name            TEXT DEFAULT '',
     finished        BOOLEAN DEFAULT false,
     board_id        INTEGER REFERENCES boards(board_id)
@@ -25,8 +25,12 @@ CREATE TABLE users (
     password        TEXT
 );
 CREATE TABLE sessions (
-    session_id      TEXT UNIQUE NOT NULL PRIMARY KEY,
-    uid             INTEGER
+    session_id      SERIAL PRIMARY KEY,
+    uid             INTEGER REFERENCES users(uid),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_active     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires         TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '6 hours'),
+    session_hash    TEXT NOT NULL
 );
 CREATE TABLE drinks (
     drink_id        SERIAL PRIMARY KEY,
@@ -46,7 +50,7 @@ CREATE TABLE ingredients (
 );
 CREATE TABLE turns (
     turn_id         SERIAL PRIMARY KEY,
-    start_time      DATE DEFAULT CURRENT_TIMESTAMP,
+    start_time      TIMESTAMPTZ NOT NULL DEFAULT now(),
     team_id         INTEGER REFERENCES teams(team_id),
     game_id         INTEGER REFERENCES games(game_id),
     dice1           INTEGER,

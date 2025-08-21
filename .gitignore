@@ -1,3 +1,4 @@
 /target
 .env*
 .idea
+/migrations/V4__seed_with_user_login.sql

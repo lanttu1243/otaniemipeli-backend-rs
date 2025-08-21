@@ -42,7 +42,30 @@ pub struct UserInfo {
     pub uid: i32,
     pub username: String,
     pub email: String,
+    pub user_types: UserTypes,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SessionInfo {
+    pub uid: i32,
+    pub session_hash: String,
+    pub user_types: UserTypes,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserSessionInfo {
+    pub user: UserInfo,
+    pub session: SessionInfo,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserTypes {
     pub user_types: Vec<UserType>,
+}
+impl UserTypes {
+    pub fn new() -> Self {
+        Self { user_types: Vec::new() }
+    }
+    pub fn push(&mut self, user_type: UserType) {
+        self.user_types.push(user_type);
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameInfo {
