@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tokio_postgres::types::{FromSql, ToSql};
+use chrono::{DateTime, Utc};
 pub type PgError = tokio_postgres::error::Error;
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
 #[postgres(name = "placetype")]
@@ -93,6 +94,8 @@ pub struct GameInfo {
     pub id: i32,
     pub name: String,
     pub board: String,
+    pub finished: bool,
+    pub start_time: DateTime<Utc>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PostGame {

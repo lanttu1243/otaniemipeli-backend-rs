@@ -1,10 +1,10 @@
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
-use crate::database::games::post_game;
+use crate::database::games::{get_games, post_game};
 use crate::database::login::check_session;
 use crate::server::MessageIn;
 use crate::utils::state::AppState;
-use crate::utils::types::{MessageBack, PostGame, SocketAuth};
+use crate::utils::types::{Games, MessageBack, PostGame, SocketAuth};
 
 pub async fn referee_on_connect<A: Adapter>(auth: Data<SocketAuth>, s: SocketRef<A>, State(state): State<AppState>) {
     let token = auth.token.clone();
@@ -57,6 +57,11 @@ pub async fn referee_on_connect<A: Adapter>(auth: Data<SocketAuth>, s: SocketRef
                  Ok(game) => {
                      if let Err(send) = s.emit("response", &game) {
                          eprintln!("send error: {send}");
+                     } else {
+                         let games = get_games(&client).await.unwrap_or_else(|e| {
+                             Games { games: Vec::new() }
+                         });
+                         s.emit("reply-games", &games).expect("Failed replying games");
                      }
                  }
                  Err(e) => {

@@ -7,7 +7,7 @@ CREATE TABLE boards (
 );
 CREATE TABLE games (
     game_id         SERIAL PRIMARY KEY,
-    date            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    start_time      TIMESTAMPTZ NOT NULL DEFAULT now(),
     name            TEXT DEFAULT '',
     finished        BOOLEAN DEFAULT false,
     board_id        INTEGER REFERENCES boards(board_id)

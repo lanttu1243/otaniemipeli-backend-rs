@@ -4,8 +4,13 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use axum::body::Body;
+use axum::extract::{State};
+use axum::middleware::Next;
+use http::{Method, Request};
 use serde::Serialize;
 use thiserror::Error;
+use crate::database::login::check_session;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -59,5 +64,38 @@ impl From<deadpool_postgres::PoolError> for AppError {
     fn from(e: deadpool_postgres::PoolError) -> Self {
         eprintln!("{e}");
         AppError::Database("Database operations encountered an error!".into())
+    }
+}
+
+async fn auth_middleware<B>(
+    State(state): State<AppState>,
+    req: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    if req.method() == Method::GET {
+        return Ok(next.run(req).await);
+    }
+    let client = match state.db.get().await {
+        Ok(client) => client,
+        Err(e) => {
+            println!("{}", e);
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+    };
+    match req.headers().get(http::header::AUTHORIZATION) {
+        Some(auth_header) => {
+            match check_session(auth_header.to_str().unwrap(), &client).await {
+                Ok(_) => {
+                    Ok(next.run(req).await)
+                },
+                Err(e) => {
+                    eprintln!("{e}");
+                    Err(StatusCode::INTERNAL_SERVER_ERROR)
+                }
+            }
+        },
+        None => {
+            Err(StatusCode::UNAUTHORIZED)
+        }
     }
 }

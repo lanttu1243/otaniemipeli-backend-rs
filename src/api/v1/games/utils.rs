@@ -8,6 +8,7 @@ use crate::utils::types::{Games, PostGame};
 pub async fn games_get(
     state: State<AppState>
 ) -> Result<Json<Games>, AppError> {
+    println!("GET Games");
     let client: Client = state.db.get().await?;
     match get_games(&client).await {
         Ok(drinks) => Ok(Json(drinks)),

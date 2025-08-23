@@ -7,7 +7,7 @@ use self::utils::*;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/games",
+        .route("/",
                get(games_get)
                    .post(games_post))
 }
