@@ -1,5 +1,5 @@
-CREATE TYPE place_type AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
-CREATE TYPE user_type AS ENUM ('admin', 'ie', 'referee', 'secretary', 'team');
+CREATE TYPE PLACETYPE AS ENUM ('normal', 'food', 'sauna', 'special', 'guild');
+CREATE TYPE USERTYPE AS ENUM ('admin', 'referee', 'ie', 'secretary', 'team');
 
 CREATE TABLE boards (
     board_id        SERIAL PRIMARY KEY,
@@ -29,8 +29,8 @@ CREATE TABLE sessions (
     uid             INTEGER REFERENCES users(uid),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     last_active     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires         TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '6 hours'),
-    session_hash    TEXT NOT NULL
+    expires         TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '4 hours'),
+    session_hash    TEXT UNIQUE NOT NULL
 );
 CREATE TABLE drinks (
     drink_id        SERIAL PRIMARY KEY,
@@ -40,7 +40,7 @@ CREATE TABLE places (
     place_id        SERIAL PRIMARY KEY,
     place_name      TEXT,
     rule            TEXT DEFAULT '',
-    place_type      place_type NOT NULL
+    place_type      PLACETYPE NOT NULL
 );
 CREATE TABLE ingredients (
     ingredient_id   SERIAL PRIMARY KEY,
@@ -107,6 +107,50 @@ CREATE TABLE place_connections (
 );
 CREATE TABLE user_types (
     uid             INTEGER REFERENCES users(uid),
-    user_type       user_type NOT NULL,
+    user_type       USERTYPE NOT NULL,
     PRIMARY KEY (uid, user_type)
 );
+
+
+ALTER TABLE user_types
+    ADD CONSTRAINT user_types_uid_type_uniq UNIQUE (uid, user_type);
+
+-- drop old stuff if exists
+DROP TRIGGER IF EXISTS trg_grant_secretary ON user_types;
+DROP FUNCTION IF EXISTS grant_secretary_row();
+
+-- row-level trigger: only runs when a row is inserted
+CREATE OR REPLACE FUNCTION grant_secretary_row()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.user_type = 'admin'::USERTYPE THEN
+        INSERT INTO user_types (uid, user_type)
+        VALUES
+            (NEW.uid, 'referee'::USERTYPE),
+            (NEW.uid, 'ie'::USERTYPE),
+            (NEW.uid, 'secretary'::USERTYPE)
+        ON CONFLICT (uid, user_type) DO NOTHING;
+
+    ELSIF NEW.user_type = 'referee'::USERTYPE THEN
+        INSERT INTO user_types (uid, user_type)
+        VALUES
+            (NEW.uid, 'ie'::USERTYPE),
+            (NEW.uid, 'secretary'::USERTYPE)
+        ON CONFLICT (uid, user_type) DO NOTHING;
+
+    ELSIF NEW.user_type = 'ie'::USERTYPE THEN
+        INSERT INTO user_types (uid, user_type)
+        VALUES (NEW.uid, 'secretary'::USERTYPE)
+        ON CONFLICT (uid, user_type) DO NOTHING;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_grant_secretary
+    AFTER INSERT ON user_types
+    FOR EACH ROW
+EXECUTE FUNCTION grant_secretary_row();

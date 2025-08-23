@@ -1,12 +1,13 @@
 use axum::Router;
-use axum::routing::post;
-use crate::login::utils::verify_session;
+use axum::routing::{delete, post};
+use crate::login::utils::{end_all_sessions, end_session, start_session, verify_session};
 use crate::utils::state::AppState;
 
 pub mod utils;
-use self::utils::{post_login};
+
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/", post(post_login).put(verify_session))
+        .route("/", post(start_session).put(verify_session).delete(end_session))
+        .route("/all", delete(end_all_sessions))
 }

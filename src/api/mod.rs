@@ -1,4 +1,5 @@
 pub mod v1;
+pub mod referee;
 
 use axum::Router;
 use crate::utils::state::AppState;

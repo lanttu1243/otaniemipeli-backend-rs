@@ -110,3 +110,7 @@ ADD CONSTRAINT place_connections_target_fkey
     FOREIGN KEY (target)
         REFERENCES board_places(place_number)
         ON DELETE CASCADE;
+
+ALTER TABLE user_types
+    DROP CONSTRAINT IF EXISTS user_types_uid_type_uniq,
+    ADD CONSTRAINT user_types_uid_type_uniq UNIQUE (uid, user_type);

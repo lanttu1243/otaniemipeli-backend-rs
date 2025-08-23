@@ -1,18 +1,42 @@
 use std::env;
+use std::sync::Arc;
 use crate::api::router as api_router;
+use crate::api::referee as referee_server;
 use crate::login::router as login_router;
 use crate::database::utils::make_pool;
 use tokio::{
     net::TcpListener,
 };
+use http::{Method, header};
+use tower_http::cors::CorsLayer;
+use http::HeaderValue;
+use types::SocketAuth;
+
 use axum::{
     routing::get,
     Router,
-    serve::Serve,
 };
+use socketioxide::{
+    extract::{Data, SocketRef, State},
+    SocketIo,
+};
+use tracing_subscriber::fmt::format;
 use tracing_subscriber::FmtSubscriber;
 
-use crate::utils::state;
+use crate::utils::{state, types};
+use crate::utils::state::AppState;
+
+#[derive(Debug, serde::Deserialize)]
+pub(crate) struct MessageIn {
+    pub message_type: String,
+    pub content: String,
+    pub value: i32,
+    pub timestamp: String,
+}
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct TokenStore {
+    pub token: String,
+}
 
 pub async fn start() -> anyhow::Result<()> {
 
@@ -31,17 +55,36 @@ pub async fn start() -> anyhow::Result<()> {
         Ok(pool) => pool,
         Err(_) => panic!("Failed to create pool"),
     };
+    let frontend_url = env::var("FRONTEND_URL")
+        .unwrap_or_else(|_| "http://localhost:3000".to_string());
+
+    let origin = HeaderValue::from_str(&frontend_url)
+        .expect("FRONTEND_URL must be a valid Origin header");
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
+        // list the exact dev origins you use (no '*' if credentials are used)
+        .allow_origin([origin])
+        .allow_credentials(true);
 
     let bind = format!("0.0.0.0:{}", port);
     println!("\nServer started at port {}", port);
 
-    let state = state::AppState::new(pool);
+    let state = AppState::new(pool);
+
+    let (layer, io) = SocketIo::builder()
+        .with_state(state.clone())
+        .build_layer();
+
+    io.ns("/referee", referee_server::referee_on_connect);
 
     let app = Router::new()
         .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
         .nest("/login", login_router())
         .nest("/api", api_router())
-        .with_state(state);
+        .with_state(state)
+        .layer(layer)
+        .layer(cors);
 
     let listener = match TcpListener::bind(&bind).await {
         Ok(listener) => listener,

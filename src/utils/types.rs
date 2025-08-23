@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::types::{FromSql, ToSql};
 pub type PgError = tokio_postgres::error::Error;
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
-#[postgres(name = "place_type")]
+#[postgres(name = "placetype")]
 #[derive(PartialEq, Eq)]
 pub enum PlaceType {
     #[postgres(name = "normal")]
@@ -16,8 +16,16 @@ pub enum PlaceType {
     #[postgres(name = "guild")]
     guild,
 }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SocketAuth { pub token: String }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MessageBack {
+    pub ok: bool,
+    pub echo: String,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
-#[postgres(name = "user_type")]
+#[postgres(name = "usertype")]
 #[derive(PartialEq, Eq)]
 pub enum UserType {
     #[postgres(name = "admin")]
@@ -31,7 +39,20 @@ pub enum UserType {
     #[postgres(name = "team")]
     team,
 }
-
+impl UserType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            UserType::admin => "admin",
+            UserType::ie => "ie",
+            UserType::referee => "referee",
+            UserType::secretary => "secretary",
+            UserType::team => "team",
+        }
+    }
+    pub fn display(&self) -> String {
+        self.as_str().to_lowercase()
+    }
+}
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LoginInfo {
     pub username: String,

@@ -44,7 +44,11 @@ pub async fn post_login_db(login_info: LoginInfo, client: &Client) -> Result<(Us
 
 pub async fn create_session(uid: i32, client: &Client) -> Result<String, PgError> {
     let query_str = "\
-    INSERT INTO sessions (uid, session_hash) values ($1, $2)";
+    INSERT INTO sessions (uid, session_hash) \
+    SELECT u.uid, $2 \
+    FROM users as u \
+    WHERE u.uid = $1 \
+    RETURNING uid";
 
     let salt = env::var("SALT").unwrap_or_else(|_| {
         eprintln!("SALT environment variable not set");
@@ -61,6 +65,14 @@ pub async fn create_session(uid: i32, client: &Client) -> Result<String, PgError
         Err(e) => Err(e),
     }
 }
+pub async fn update_session(session_hash: &str, client: &Client) -> (Result<u64, PgError>, Result<u64, PgError>) {
+    let query_str1 = "\
+    UPDATE sessions SET last_active = now(), expires = GREATEST(expires, now() + interval '1 hour') WHERE session_hash = $1";
+    let query_str2 = "\
+    DELETE FROM sessions WHERE expires < now()";
+    (client.execute(query_str2, &[]).await,
+    client.execute(query_str1, &[&session_hash]).await)
+}
 pub async fn check_session(session_hash: &str, client: &Client) -> Result<SessionInfo, PgError> {
     let query_str = "\
     SELECT \
@@ -70,6 +82,8 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
         FROM sessions as s \
          LEFT JOIN user_types as ut ON s.uid = ut.uid \
          WHERE s.session_hash = $1 AND s.expires > now()";
+
+    let update = update_session(session_hash, client).await;
 
     let query = match client.query(query_str, &[&session_hash]).await {
         Ok(r) => r,
@@ -90,5 +104,16 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
             Err(_) => continue,
         }
     };
-    Ok(session)
+    let ses = session.clone();
+    Ok(ses)
+}
+pub async fn delete_session(session_hash: &str, client: &Client) -> Result<u64, PgError> {
+    let query_str = "\
+    DELETE FROM sessions WHERE session_hash = $1";
+    client.execute(query_str, &[&session_hash]).await
+}
+pub async fn delete_all_sessions(uid: i32, client: &Client) -> Result<u64, PgError> {
+    let query_str = "\
+    DELETE FROM sessions WHERE uid = $1";
+    client.execute(query_str, &[&uid]).await
 }
