@@ -9,6 +9,7 @@ use axum::extract::{State};
 use axum::middleware::Next;
 use http::{Method, Request};
 use serde::Serialize;
+use socketioxide::layer::SocketIoLayer;
 use thiserror::Error;
 use crate::database::login::check_session;
 
@@ -67,7 +68,7 @@ impl From<deadpool_postgres::PoolError> for AppError {
     }
 }
 
-async fn auth_middleware<B>(
+pub async fn auth_middleware<B>(
     State(state): State<AppState>,
     req: Request<Body>,
     next: Next,

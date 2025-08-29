@@ -24,7 +24,7 @@ use tracing_subscriber::fmt::format;
 use tracing_subscriber::FmtSubscriber;
 
 use crate::utils::{state, types};
-use crate::utils::state::AppState;
+use crate::utils::state::{auth_middleware, AppState};
 
 #[derive(Debug, serde::Deserialize)]
 pub(crate) struct MessageIn {
@@ -75,7 +75,6 @@ pub async fn start() -> anyhow::Result<()> {
     let (layer, io) = SocketIo::builder()
         .with_state(state.clone())
         .build_layer();
-
     io.ns("/referee", referee_server::referee_on_connect);
 
     let app = Router::new()

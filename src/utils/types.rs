@@ -50,8 +50,10 @@ impl UserType {
             UserType::team => "team",
         }
     }
-    pub fn display(&self) -> String {
-        self.as_str().to_lowercase()
+}
+impl core::fmt::Display for UserType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 #[derive(Clone, Serialize, Deserialize)]
@@ -65,6 +67,13 @@ pub struct UserInfo {
     pub username: String,
     pub email: String,
     pub user_types: UserTypes,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserCreateInfo {
+    pub username: String,
+    pub email: String,
+    pub user_type: UserType,
+    pub password: String,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SessionInfo {

@@ -69,4 +69,17 @@ pub async fn referee_on_connect<A: Adapter>(auth: Data<SocketAuth>, s: SocketRef
                  }
              }
          });
+    s.on("get-games", |s: SocketRef<A>| async move {
+        let client = match state.db.get().await {
+            Ok(c) => c,
+            Err(e) => {
+                let _ = s.emit("response-error", &format!("db pool error: {e}"));
+                return;
+            }
+        };
+        let games = get_games(&client).await.unwrap_or_else(|e| {
+            Games { games: Vec::new() }
+        });
+        s.emit("reply-games", &games).expect("Failed replying games");
+    })
 }

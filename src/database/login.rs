@@ -1,8 +1,7 @@
 use std::env;
 use chrono::prelude::*;
-use axum::Json;
 use tokio_postgres::Client;
-use crate::utils::types::{LoginInfo, PgError, SessionInfo, UserInfo, UserTypes};
+use crate::utils::types::{LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserTypes};
 use sha2::{Sha256, Digest};
 
 pub async fn post_login_db(login_info: LoginInfo, client: &Client) -> Result<(UserInfo, String), PgError> {
@@ -83,7 +82,7 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
          LEFT JOIN user_types as ut ON s.uid = ut.uid \
          WHERE s.session_hash = $1 AND s.expires > now()";
 
-    let update = update_session(session_hash, client).await;
+    update_session(session_hash, client).await;
 
     let query = match client.query(query_str, &[&session_hash]).await {
         Ok(r) => r,
@@ -116,4 +115,49 @@ pub async fn delete_all_sessions(uid: i32, client: &Client) -> Result<u64, PgErr
     let query_str = "\
     DELETE FROM sessions WHERE uid = $1";
     client.execute(query_str, &[&uid]).await
+}
+pub async fn users_exist(client: &Client) -> Result<bool, PgError> {
+    let query_str = "\
+    SELECT EXISTS (SELECT 1 FROM users)";
+
+    let row = client
+        .query_one(query_str, &[])
+        .await?;
+
+    let exists: bool = row.get(0);
+    Ok(exists)
+}
+pub async fn email_exist(client: &Client, email: &String) -> Result<bool, PgError> {
+    let query_str = "\
+    SELECT EXISTS (SELECT * FROM users WHERE email = $1)";
+    let row = client.query_one(query_str, &[&email]).await?;
+    let exists: bool = row.get(0);
+    Ok(exists)
+}
+pub async fn user_create(client: &Client, user_info: UserCreateInfo) -> Result<(UserInfo, SessionInfo), PgError> {
+    let query_str = "\
+    INSERT INTO users \
+    (username, email, password) values ($1, $2, $3)";
+
+    match client.execute(query_str, &[&user_info.username, &user_info.email, &user_info.password]).await {
+        Ok(_) => {},
+        Err(e) => return Err(e)
+    };
+    let user_session = post_login_db(
+        LoginInfo {
+            username: user_info.username,
+            password: user_info.password,
+        }, client).await?;
+    let user = user_session.0;
+    let auth = user_session.1;
+
+    let query_str2 = "\
+    INSERT INTO user_types (uid, user_type) VALUES ($1, $2)";
+    client.execute(query_str2, &[&user.uid, &user_info.user_type]).await?;
+
+    let session = match check_session(&auth, client).await {
+        Ok(s) => s,
+        Err(e) => return Err(e)
+    };
+    Ok((user, session))
 }

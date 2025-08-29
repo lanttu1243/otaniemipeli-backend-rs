@@ -1,4 +1,0 @@
-INSERT INTO users (username, email, password) values ('test', 'test@test.test', 'test');
-INSERT INTO user_types (uid, user_type) values (1, 'admin'), (1, 'ie'),
-                                               (1, 'referee'), (1, 'secretary'),
-                                               (1, 'team');

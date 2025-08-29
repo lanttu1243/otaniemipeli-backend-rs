@@ -14,6 +14,7 @@ dependencies = [
  "http",
  "once_cell",
  "postgres-types",
+ "rand 0.9.1",
  "rouille",
  "serde",
  "sha2",
