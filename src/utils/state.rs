@@ -9,7 +9,6 @@ use axum::extract::{State};
 use axum::middleware::Next;
 use http::{Method, Request};
 use serde::Serialize;
-use socketioxide::layer::SocketIoLayer;
 use thiserror::Error;
 use crate::database::login::check_session;
 
@@ -48,6 +47,8 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        tracing::error!("AppError -> \n\t{:?}: \n\t\t{}", self_code(&self), self);
+
         let (status, msg) = match self {
             AppError::Validation(m)   => (StatusCode::BAD_REQUEST, m),
             AppError::Database(m) => (StatusCode::INTERNAL_SERVER_ERROR, m),
@@ -60,6 +61,17 @@ impl IntoResponse for AppError {
         (status, Json(ErrorBody { error: msg })).into_response()
     }
 }
+fn self_code(err: &AppError) -> &'static str {
+    match err {
+        AppError::Validation(_) => "Validation",
+        AppError::Database(_) => "Database",
+        AppError::Conflict(_) => "Conflict",
+        AppError::NotFound(_) => "NotFound",
+        AppError::RateLimited => "RateLimited",
+        AppError::Internal => "Internal",
+        AppError::Unauthorized(_) => "Unauthorized",
+    }
+}
 
 impl From<deadpool_postgres::PoolError> for AppError {
     fn from(e: deadpool_postgres::PoolError) -> Self {
@@ -68,11 +80,12 @@ impl From<deadpool_postgres::PoolError> for AppError {
     }
 }
 
-pub async fn auth_middleware<B>(
+pub async fn auth_middleware(
     State(state): State<AppState>,
     req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
+    tracing::info!("{} {}", req.method(), req.uri().path());
     if req.method() == Method::GET {
         return Ok(next.run(req).await);
     }

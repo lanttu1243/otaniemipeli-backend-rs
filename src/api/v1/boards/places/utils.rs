@@ -9,7 +9,6 @@ pub async fn board_places_get(
     Path(board_id): Path<i32>,
     state: State<AppState>,
 ) -> Result<AxumJson<BoardPlaces>, AppError> {
-    println!("GET /boards/places/{board_id}");
 
     let client: Client = state.db.get().await?;
     match get_board_places(&client, board_id).await {
@@ -35,7 +34,6 @@ pub async fn places_post(
 pub async fn places_get(
     state: State<AppState>
 ) -> Result<AxumJson<Places>, AppError> {
-    println!("GET /boards/places");
 
     let client: Client = state.db.get().await?;
     match get_places(&client).await {

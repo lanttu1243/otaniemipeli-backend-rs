@@ -9,7 +9,6 @@ use crate::utils::types::{Drink, Drinks, DrinksIngredients, Ingredient, ResultIn
 pub async fn drinks_get(
     state: State<AppState>
 ) -> Result<Json<DrinksIngredients>, AppError> {
-    println!("GET /drinks");
     let client: Client = state.db.get().await?;
     match get_drinks_ingredients(&client).await {
         Ok(drinks) => Ok(Json(remove_ingredients(drinks))),
@@ -24,7 +23,6 @@ pub async fn drinks_post(
     state: State<AppState>,
     Json(drink): Json<Drink>,
 ) -> Result<Json<Drink>, AppError> {
-    println!("POST /drinks");
     let client: Client = state.db.get().await?;
     match post_drink(&client, drink.clone()).await {
         Err(e) => {
@@ -39,7 +37,6 @@ pub async fn drink_delete(
     Path(drink_id): Path<i32>,
     state: State<AppState>,
 ) -> Result<Json<ResultIntJson>, AppError> {
-    println!("DELETE /drinks/{}", drink_id);
 
     let client: Client = state.db.get().await?;
     match delete_drink(&client, drink_id).await {

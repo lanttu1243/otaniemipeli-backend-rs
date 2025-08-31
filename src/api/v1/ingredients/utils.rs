@@ -8,7 +8,7 @@ use crate::utils::types::{Ingredient, Ingredients};
 pub async fn ingredients_get(
     state: State<AppState>
 ) -> Result<Json<Ingredients>, AppError> {
-    println!("GET /ingredients");
+
     let client: Client = state.db.get().await?;
     match get_ingredients(&client).await {
         Ok(ingredients) => Ok(Json(ingredients)),

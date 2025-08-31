@@ -75,7 +75,7 @@ pub struct UserCreateInfo {
     pub user_type: UserType,
     pub password: String,
 }
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SessionInfo {
     pub uid: i32,
     pub session_hash: String,
@@ -86,7 +86,7 @@ pub struct UserSessionInfo {
     pub user: UserInfo,
     pub session: SessionInfo,
 }
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct UserTypes {
     pub user_types: Vec<UserType>,
 }

@@ -1,13 +1,9 @@
 use axum::extract::State;
 use axum::http::HeaderMap;
 use axum::Json;
-use rand::distr::Alphanumeric;
-use rand::Rng;
-use sha2::{Digest, Sha256};
-use tracing_subscriber::fmt::format;
 use crate::utils::state::{AppError, AppState};
 use crate::utils::types::{LoginInfo, SessionInfo, UserCreateInfo, UserInfo, UserSessionInfo, UserTypes};
-use crate::database::login::{check_session, delete_all_sessions, delete_session, email_exist, post_login_db, update_session, user_create, users_exist};
+use crate::database::login::*;
 
 async fn get_auth(headers: &HeaderMap) -> String {
     match headers.get(http::header::AUTHORIZATION) {
@@ -20,31 +16,10 @@ async fn get_auth(headers: &HeaderMap) -> String {
     }
 }
 
-fn hash_password(pw: String) -> String {
-    let salt: String = rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect();
-    println!("{}", salt);
-    let pre_hash = format!("{}{}", salt, pw);
-    let mut hasher = Sha256::new();
-    hasher.update(&pre_hash);
-    format!("{salt}{:X}", hasher.finalize())
-}
-fn compare_pw_to_db(pw_post: String, pw_db: String) -> bool {
-    let salt: String = pw_db.chars().take(32).collect();
-    let mut hasher = Sha256::new();
-    hasher.update(&format!("{salt}{pw_post}"));
-    let pw_hash = format!("{salt}{:X}", hasher.finalize());
-    pw_hash == pw_db
-}
-
 pub async fn start_session(
     state: State<AppState>,
     Json(login): Json<LoginInfo>,
 ) -> Result<Json<UserSessionInfo>, AppError> {
-    println!("POST /login");
     let client = state.db.get().await?;
     match post_login_db(login, &client).await {
         Ok((user, session_hash)) => {
@@ -56,7 +31,7 @@ pub async fn start_session(
                         user,
                         session
                     })),
-                    Err(e) => Err(AppError::Unauthorized("Unauthorized".parse().unwrap())),
+                    Err(_) => Err(AppError::Unauthorized("Unauthorized".parse().unwrap())),
                 }
             }
         },
@@ -136,42 +111,60 @@ pub async fn create_user(
     headers: HeaderMap,
     Json(user_info): Json<UserCreateInfo>
 ) -> Result<Json<UserSessionInfo>, AppError> {
-    println!("POST /login/create_user");
     let client = state.db.get().await?;
     let auth_hash = get_auth(&headers).await;
     let user_exist = match users_exist(&client).await {
         Ok(bool) => bool,
-        Err(_) => return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+        Err(_) => {
+            tracing::info!("Users exist check failed");
+            return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+        }
     };
-    match email_exist(&client, &user_info.email).await {
-        Ok(bool) => {
-            if bool {
-                return Err(AppError::Conflict(format!("There already exists a user with email {}!", &user_info.email)));
-            }
-        },
-        Err(_) => return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+    let exists = email_or_username_exist(&client, &user_info.email, &user_info.username)
+        .await
+        .map_err(|_| AppError::Database("The server encountered an unexpected error!".to_string()))?;
+
+    if exists {
+        let msg = format!(
+            "There already exists a user with email {} or username {}!",
+            user_info.email, user_info.username
+        );
+        tracing::info!("user exists: {}", msg);
+        return Err(AppError::Conflict(msg));
     }
     if !user_exist {
         return match user_create(&client, user_info).await {
             Ok((user, session)) => {
                 Ok(Json(
                     UserSessionInfo {
-                        user,
+                        user: UserInfo {
+                            uid: user.uid,
+                            username: user.username,
+                            email: user.email,
+                            user_types: session.clone().user_types,
+                        },
                         session
                     }
                 ))
             },
-            Err(_) => Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            Err(_) => {
+                tracing::info!("User create failed!");
+                Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            }
         }
     } else if auth_hash != "" {
         let on_session = check_session(&auth_hash, &client).await;
         match on_session {
                 Ok(session) => {
                     if !session.user_types.user_types.contains(&user_info.user_type) {
+                        tracing::info!("user trying to perform does not have the rights");
                         return Err(AppError::Unauthorized(format!("You are not authorized to create user with type {}!", &user_info.user_type)));
                     }
                 },
-                Err(_) => return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+                Err(_) => {
+                    tracing::info!("check_session failed");
+                    return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+                }
         };
         return match user_create(&client, user_info).await {
             Ok((user, _)) => {
@@ -188,12 +181,13 @@ pub async fn create_user(
                     }
                 ))
             },
-            Err(_) => Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            Err(_) => {
+                tracing::info!("User create db_failed");
+                Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            }
         }
     } else {
-        return Err(AppError::Unauthorized("You are not authorized to perform this!".parse().unwrap()).into())
+        tracing::info!("Final branch");
+        return Err(AppError::Unauthorized("You are not authorized to perform this!".parse().unwrap()))
     }
-
-
-    Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
 }

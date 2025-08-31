@@ -1,5 +1,4 @@
 use std::env;
-use std::sync::Arc;
 use crate::api::router as api_router;
 use crate::api::referee as referee_server;
 use crate::login::router as login_router;
@@ -10,20 +9,13 @@ use tokio::{
 use http::{Method, header};
 use tower_http::cors::CorsLayer;
 use http::HeaderValue;
-use types::SocketAuth;
 
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{middleware, routing::get, Router};
 use socketioxide::{
-    extract::{Data, SocketRef, State},
     SocketIo,
 };
-use tracing_subscriber::fmt::format;
 use tracing_subscriber::FmtSubscriber;
 
-use crate::utils::{state, types};
 use crate::utils::state::{auth_middleware, AppState};
 
 #[derive(Debug, serde::Deserialize)]
@@ -80,7 +72,7 @@ pub async fn start() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
         .nest("/login", login_router())
-        .nest("/api", api_router())
+        .nest("/api", api_router(state.clone()))
         .with_state(state)
         .layer(layer)
         .layer(cors);

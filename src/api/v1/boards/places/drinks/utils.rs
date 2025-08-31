@@ -9,7 +9,6 @@ pub async fn post_place_drinks(
     state: State<AppState>,
     AxumJson(place_drinks): AxumJson<PlaceDrinks>,
 ) -> Result<AxumJson<u64>, AppError> {
-    println!("POST /boards/places/drinks");
 
     let client: Client = state.db.get().await?;
     match add_place_drinks(&client, place_drinks).await {

@@ -8,7 +8,6 @@ use crate::utils::types::{Drink, DrinkIngredients, DrinkIngredientsPost, Drinks,
 pub async fn drinks_ingredients_get(
     state: State<AppState>,
 ) -> Result<Json<DrinksIngredients>, AppError> {
-    println!("GET /drinks/ingredients");
     let client: Client = state.db.get().await?;
     match get_drinks_ingredients(&client).await {
         Ok(drinks_ingredients) if drinks_ingredients.drink_ingredients.is_empty() => {
@@ -25,7 +24,6 @@ pub async fn drink_ingredients_post(
     state: State<AppState>,
     Json(drink_ingredients): Json<DrinkIngredientsPost>,
 ) -> Result<Json<DrinkIngredientsPost>, AppError> {
-    println!("POST /drinks/ingredients");
     let client: Client = state.db.get().await?;
     match add_ingredients(&client, drink_ingredients.clone()).await {
         Err(e) => {
@@ -41,7 +39,6 @@ pub async fn drink_ingredient_delete(
     query: Query<IngredientIdQuery>,
 ) -> Result<Json<Ingredient>, AppError> {
     let ingredient_id: i32 = query.ingredient_id;
-    println!("DELETE /drinks/ingredients/{}?{}", drink_id, ingredient_id);
     let client: Client = state.db.get().await?;
     match delete_ingredient_from_drink(&client, drink_id, ingredient_id).await {
         Ok(_) => Ok(
@@ -60,7 +57,6 @@ pub async fn drink_ingredients_get(
     Path(drink_id): Path<i32>,
     state: State<AppState>,
 ) -> Result<Json<DrinkIngredients>, AppError> {
-    println!("GET /drinks/ingredients");
     let client: Client = state.db.get().await?;
     let drinks: Drinks = match get_drinks(&client).await {
         Ok(drinks) => drinks,
