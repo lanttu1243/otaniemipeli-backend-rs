@@ -76,59 +76,71 @@ INSERT INTO drink_ingredients (drink_id, ingredient_id, quantity) VALUES
                                 (26, 12, 2),
                                 (27, 24, 4);
 
-INSERT INTO places (place_name, rule, place_type) VALUES
-                                                                       ('Metroasema', 'Kaikki joukkueet aloittavat pelin Tietotien metroaseman luona olevalta pysäkiltä. Jokainen joukkue juo tuomarin päätöksen mukaisen määrän tuomarin päättämää juomaa.', 'special'),
-                                                                       ('Normaaliruutu', 'Normaalista ruudusta löydät kaljan. Ruutua ei täytetä', 'normal'),
-                                                                       ('A-bloc', 'A Blocissa joukkueelle tarjoillaan HTR:ää (Hyytelön Täyteinen Rasti).', 'food'),
-                                                                       ('Raide-Jokeri', 'Raide-Jokeri teleporttaa joukkueen Maarin pysäkille. Matkan aikana nälkä yllättää ja joukkue hankkii K-Marketista lasillisen hyytelöä.', 'special'),
-                                                                       ('Oikeustalo', 'Absintti', 'special'),
-                                                                       ('Lintutorni', 'Joukkue erottaa tarkoilla korvillaan pöllön huhuilua ja ansaitsee lasin jaloviinaa.', 'special'),
-                                                                       ('Suo', 'Lintutornista selvittyään joukkue joutuu vielä kahlaamaan suon läpi ja nauttimaan annoksen suohautaa.', 'special'),
-                                                                       ('Alvari', 'Alvariin saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.', 'food'),
-                                                                       ('Prodekon kiltahuone', 'Prodekon kiltahuoneella juodaan tuopillinen Thunderia. Thunder ei tunnetusti lopu tarpeeksi ajoissa.', 'guild'),
-                                                                       ('OLOhuone', 'OLOhuoneella juodaankin tequilaa!', 'guild'),
-                                                                       ('Database', 'DG:n kiltahuoneella juomana on glitterillä koristeltua Trocaderoa. Yleisön vaatiessa terästettynä.', 'guild'),
-                                                                       ('SIKin kiltahuone', 'SIKin kiltahuoneella tarjoillaan annos kuulalaakeria.', 'guild'),
-                                                                       ('ASki', 'AS:n kiltiksellä pelataan AShuikkaa. Siispä ruudussa on keskituoppi sisältäen kaljaa, siideriä ja punkkua suhteessa 1:1:1.', 'guild'),
-                                                                       ('TUASin ruokala', 'TUASin ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.', 'food'),
-                                                                       ('T-talon ruokala', 'T-talon ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.', 'food'),
-                                                                       ('Design Factory', 'Joukkue keksii uuden startup-idean ja saa suunnitella seuraavalle saapuvalle joukkueelle drinkin isännän ja emännän ilmoittamasta ainesosavalikoimasta.', 'special'),
-                                                                       ('Sähkölaitos', 'Sähkölaitokselta saa kaljan sijaan piristävän energiajuoman.', 'special'),
-                                                                       ('Vanha kiltis', 'Vanhan kiltahuoneen muistoksi kiltahuoneella on aluksi yksi kalja. Ruutu täydennetään jokaisen joukkueen jälkeen. Jokaisen käynnin jälkeen ruutuun ilmestyy yksi kalja enemmän kuin edellisellä kerralla!', 'guild'),
-                                                                       ('IK:n kiltis', 'Rakennusinsinöörikillan kiltahuoneella pelataan pikainen Norske Kimble. Joukkue heittää kahta noppaa ja saa pienemmän silmäluvun mukaisen määrän kaljapulloja juotavakseen.', 'guild'),
-                                                                       ('Ossinlampi', 'Joukkue pistäytyy viilentymässä Ossinlammessa ja nauttii lasillisen lammen vettä.', 'special'),
-                                                                       ('Kvarkki', 'Joukkue juhlii kvarkkipäivää lasillisella hyytelöä.', 'food'),
-                                                                       ('Maarintalo, excubussi', 'Excubussi kaappaa joukuueen mukaansa Tampereelle. Joukkue voi halutessaan tilata bussimatkalle juotavaa (kola, kalja, siideri, punkku).', 'special'),
-                                                                       ('Miinusmaa', 'Joukkue saa annoksen haukea.', 'special'),
-                                                                       ('Ylioppilaiden terveydenhuoltosäätiö', 'YTHS:llä joukkue saa kaljapullon sijasta juotavakseen snapsilasillisen pirtua. Hätätilassa käy myös esim. A12-denaturoitu sprii.', 'special'),
-                                                                       ('Tietokillan varasto', 'Tietokillan varastolla pelataankin ykköstä joukkueiden välillä. Joukkueet heittävät yhtä noppaa alkaen ruutuun saapuneesta joukkueesta. Ensimmäisenä ykkösen heittänyt joukkue voittaa annoksen pelijuomaa, ideaalisesti 1:1 appelsiinimehulla lantrattu 80%:lla vodkalla. Tuplilla ruutuun saapuessa heitetään kahteen ykköseen asti.', 'special'),
-                                                                       ('Taikametsä', 'Taikametsään päätyvä joukkue ei voi koskaan tietää mitä saa. Joukkue nauttii noppien silmäluvun osoittaman taikajuoman. Kullekin silmälukuyhdistelmälle kuuluvan juoman päättävät isäntä ja emäntä ennen peliä.', 'special'),
-                                                                       ('Kappeli', 'Kappelissa joukkueelle tarjotaan tavanomaisen kaljan sijaan lasillinen ehtoollisviiniä, joka tulee nauttia ennen matkan jatkamista.', 'special'),
-                                                                       ('Rantasauna', 'Rantsulta ei kalja lopu!', 'sauna'),
-                                                                       ('Gorsu', 'Gorsustahan ei tunnetusti kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.', 'sauna'),
-                                                                       ('Smökki', 'Joukkue saapuu Smökkiin sitseille. Tarjolla on tietysti ruokaa ja juomaa eli yksi olut ja yksi hyytelö.', 'special'),
-                                                                       ('Ossinsauna', 'Ossinsaunaltakaan ei kalja lopu. Ruutu täytetään jokaisen joukkueen jälkeen.', 'sauna'),
-                                                                       ('OK20', 'OK20:n saunoilta ei kalja lopu!', 'sauna'),
-                                                                       ('JMT1 aula', 'Törmäät aulassa vanhaan tuttuun, joka tarjoaa Ferraa.', 'special'),
-                                                                       ('JMT3', '3A:n saunastakaan ei kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.', 'sauna'),
-                                                                       ('Otaranta 8', 'Myöskään Otarannan kattosaunalta ei kalja lopu kesken. Ruutu täytetään jokaisen joukkueen jälkeen.', 'sauna'),
-                                                                       ('Täffä', 'Täffällä ei olekaan spagettipäivä vaan hyytelöpäivä.', 'food'),
-                                                                       ('Dipoli', 'Dipolissa törmäät rehtoriin, joka kutsuu joukkueen lounaalle. Joukkue saa hyytelöä.', 'food'),
-                                                                       ('X-burger', 'X-Burgerilta joukkue hankkii itselleen annoksen hyytelöä.', 'food'),
-                                                                       ('Vanha ostari', 'Vanhan ostarin monipuolinen tarjonta innoittaa joukkueen hankkimaan sekä lasillisen hyytelöä että oluen palanpainikkeeksi.', 'food'),
-                                                                       ('Aalto-yliopiston Ylioppilaskunta', 'Joukkue eksyy AYY:n keskustoimistolle ja vapaaehtoishommat vievät yllättäen mennessään. Joukkue heittää yhtä noppaa ja siirtyy silmäluvun mukaan taaksepäin. Tuplilla taaksepäin liikutaan tietenkin tuplat.', 'special'),
-                                                                       ('Fyssan kiltis', 'Fyysikkokillan kiltiksellä joukkueelle on tarjolla asteen pöhkömpää taksia.', 'guild'),
-                                                                       ('Inkubion kiltis', 'Inkubion kiltahuoneella tarjolla on Apoptoosia.', 'guild'),
-                                                                       ('Koneen kiltis', 'Koneinsinöörikillan kiltahuoneella joukkue juo tuopin korjaussarjaa.', 'guild'),
-                                                                       ('Kiltis', 'Ensimmäisenä Tietokillan kiltahuoneelle saapuva joukkue voittaa pelin!', 'special'),
-                                                                       ('Mikontalo', 'Mikontalo tekee kiljua Kioton sopimusta uhmaten! Joukkue juo lasin kotiviiniä eli punkkua.', 'special'),
-                                                                       ('Kultainen apina', 'Kapinasta ei kalja lopu. Joukkue juo yhden oluen.', 'special'),
-                                                                       ('TiTen kiltahuone', 'Kiltahuone muuttaa Kolaa koodiksi. Joukkue juo lasin kolaa. Terästettynä yleisön vaatiessa.', 'guild'),
-                                                                       ('Teekkarisauna', 'Joukkue on päätynyt teekkarisaunalle, jossa ohjelmassa on teekkarisauna™. Joukkue joutuu nauttimaan kolme pulloa kaljaa sekä lasillisen hyytelöä ennen kuin voi jatkaa matkaa.', 'sauna'),
-                                                                       ('Tupsula', 'Käyt padassa ja hörppäät puoli litraa patavettä. Varo kortsuja! Ryhmä juo puoli litraa lämmintä lonkeroa, jossa saattaa olla kondomi.', 'special'),
-                                                                       ('Etuparkki. excubussi', 'Joukkueen päästessä tähän ruutuun (yli menevät heitot lasketaan) excubussi vie takaisin Otaniemeen. Joukkue voi halutessaan tilata bussimatkalle juotavaa (kola, kalja, siideri, punkku). Otaniemessä joukkue saapuukin sopivasti Smökkiin sitsaamaan.', 'special'),
-                                                                        ('Maarinsolmu', 'Joukkue saapuu Maarinsolmuun ja ostaa lasillisen hyytelöä.', 'food'),
-                                                                       ('Urheilukenttä', 'Urheilukentän kohdalla sinne ensimmäiseksi saapunut joukkue suorittaa 110 metrin aidat eli juo kolme pulloa olutta, ennenkuin pääsee jatkamaan. Ruutua ei täydennetä!', 'special');
+COPY public.places (place_id, place_name, rule, place_type) FROM stdin;
+1	Metroasema	Kaikki joukkueet aloittavat pelin Tietotien metroaseman luona olevalta pysäkiltä. Jokainen joukkue juo tuomarin päätöksen mukaisen määrän tuomarin päättämää juomaa.	special
+2	Normaaliruutu	Normaalista ruudusta löydät kaljan. Ruutua ei täytetä	normal
+3	A-bloc	A Blocissa joukkueelle tarjoillaan HTR:ää (Hyytelön Täyteinen Rasti).	food
+4	Raide-Jokeri	Raide-Jokeri teleporttaa joukkueen Maarin pysäkille. Matkan aikana nälkä yllättää ja joukkue hankkii K-Marketista lasillisen hyytelöä.	special
+5	Oikeustalo	Absintti	special
+6	Lintutorni	Joukkue erottaa tarkoilla korvillaan pöllön huhuilua ja ansaitsee lasin jaloviinaa.	special
+7	Suo	Lintutornista selvittyään joukkue joutuu vielä kahlaamaan suon läpi ja nauttimaan annoksen suohautaa.	special
+8	Alvari	Alvariin saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+9	Prodekon kiltahuone	Prodekon kiltahuoneella juodaan tuopillinen Thunderia. Thunder ei tunnetusti lopu tarpeeksi ajoissa.	guild
+10	OLOhuone	OLOhuoneella juodaankin tequilaa!	guild
+11	Database	DG:n kiltahuoneella juomana on glitterillä koristeltua Trocaderoa. Yleisön vaatiessa terästettynä.	guild
+12	SIKin kiltahuone	SIKin kiltahuoneella tarjoillaan annos kuulalaakeria.	guild
+13	ASki	AS:n kiltiksellä pelataan AShuikkaa. Siispä ruudussa on keskituoppi sisältäen kaljaa, siideriä ja punkkua suhteessa 1:1:1.	guild
+14	TUASin ruokala	TUASin ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+15	T-talon ruokala	T-talon ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+16	Design Factory	Joukkue keksii uuden startup-idean ja saa suunnitella seuraavalle saapuvalle joukkueelle drinkin isännän ja emännän ilmoittamasta ainesosavalikoimasta.	special
+17	Sähkölaitos	Sähkölaitokselta saa kaljan sijaan piristävän energiajuoman.	special
+18	Vanha kiltis	Vanhan kiltahuoneen muistoksi kiltahuoneella on aluksi yksi kalja. Ruutu täydennetään jokaisen joukkueen jälkeen. Jokaisen käynnin jälkeen ruutuun ilmestyy yksi kalja enemmän kuin edellisellä kerralla!	guild
+19	IK:n kiltis	Rakennusinsinöörikillan kiltahuoneella pelataan pikainen Norske Kimble. Joukkue heittää kahta noppaa ja saa pienemmän silmäluvun mukaisen määrän kaljapulloja juotavakseen.	guild
+20	Ossinlampi	Joukkue pistäytyy viilentymässä Ossinlammessa ja nauttii lasillisen lammen vettä.	special
+21	Kvarkki	Joukkue juhlii kvarkkipäivää lasillisella hyytelöä.	food
+22	Maarintalo, excubussi	Excubussi kaappaa joukuueen mukaansa Tampereelle. Joukkue voi halutessaan tilata bussimatkalle juotavaa (kola, kalja, siideri, punkku).	special
+23	Miinusmaa	Joukkue saa annoksen haukea.	special
+24	Ylioppilaiden terveydenhuoltosäätiö	YTHS:llä joukkue saa kaljapullon sijasta juotavakseen snapsilasillisen pirtua. Hätätilassa käy myös esim. A12-denaturoitu sprii.	special
+25	Tietokillan varasto	Tietokillan varastolla pelataankin ykköstä joukkueiden välillä. Joukkueet heittävät yhtä noppaa alkaen ruutuun saapuneesta joukkueesta. Ensimmäisenä ykkösen heittänyt joukkue voittaa annoksen pelijuomaa, ideaalisesti 1:1 appelsiinimehulla lantrattu 80%:lla vodkalla. Tuplilla ruutuun saapuessa heitetään kahteen ykköseen asti.	special
+26	Taikametsä	Taikametsään päätyvä joukkue ei voi koskaan tietää mitä saa. Joukkue nauttii noppien silmäluvun osoittaman taikajuoman. Kullekin silmälukuyhdistelmälle kuuluvan juoman päättävät isäntä ja emäntä ennen peliä.	special
+27	Kappeli	Kappelissa joukkueelle tarjotaan tavanomaisen kaljan sijaan lasillinen ehtoollisviiniä, joka tulee nauttia ennen matkan jatkamista.	special
+28	Rantasauna	Rantsulta ei kalja lopu!	sauna
+29	Gorsu	Gorsustahan ei tunnetusti kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.	sauna
+30	Smökki	Joukkue saapuu Smökkiin sitseille. Tarjolla on tietysti ruokaa ja juomaa eli yksi olut ja yksi hyytelö.	special
+31	Ossinsauna	Ossinsaunaltakaan ei kalja lopu. Ruutu täytetään jokaisen joukkueen jälkeen.	sauna
+32	OK20	OK20:n saunoilta ei kalja lopu!	sauna
+33	JMT1 aula	Törmäät aulassa vanhaan tuttuun, joka tarjoaa Ferraa.	special
+34	JMT3	3A:n saunastakaan ei kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.	sauna
+35	Otaranta 8	Myöskään Otarannan kattosaunalta ei kalja lopu kesken. Ruutu täytetään jokaisen joukkueen jälkeen.	sauna
+36	Täffä	Täffällä ei olekaan spagettipäivä vaan hyytelöpäivä.	food
+37	Dipoli	Dipolissa törmäät rehtoriin, joka kutsuu joukkueen lounaalle. Joukkue saa hyytelöä.	food
+38	X-burger	X-Burgerilta joukkue hankkii itselleen annoksen hyytelöä.	food
+39	Vanha ostari	Vanhan ostarin monipuolinen tarjonta innoittaa joukkueen hankkimaan sekä lasillisen hyytelöä että oluen palanpainikkeeksi.	food
+40	Aalto-yliopiston Ylioppilaskunta	Joukkue eksyy AYY:n keskustoimistolle ja vapaaehtoishommat vievät yllättäen mennessään. Joukkue heittää yhtä noppaa ja siirtyy silmäluvun mukaan taaksepäin. Tuplilla taaksepäin liikutaan tietenkin tuplat.	special
+41	Fyssan kiltis	Fyysikkokillan kiltiksellä joukkueelle on tarjolla asteen pöhkömpää taksia.	guild
+42	Inkubion kiltis	Inkubion kiltahuoneella tarjolla on Apoptoosia.	guild
+43	Koneen kiltis	Koneinsinöörikillan kiltahuoneella joukkue juo tuopin korjaussarjaa.	guild
+44	Kiltis	Ensimmäisenä Tietokillan kiltahuoneelle saapuva joukkue voittaa pelin!	special
+45	Mikontalo	Mikontalo tekee kiljua Kioton sopimusta uhmaten! Joukkue juo lasin kotiviiniä eli punkkua.	special
+46	Kultainen apina	Kapinasta ei kalja lopu. Joukkue juo yhden oluen.	special
+47	TiTen kiltahuone	Kiltahuone muuttaa Kolaa koodiksi. Joukkue juo lasin kolaa. Terästettynä yleisön vaatiessa.	guild
+48	Teekkarisauna	Joukkue on päätynyt teekkarisaunalle, jossa ohjelmassa on teekkarisauna™. Joukkue joutuu nauttimaan kolme pulloa kaljaa sekä lasillisen hyytelöä ennen kuin voi jatkaa matkaa.	sauna
+49	Tupsula	Käyt padassa ja hörppäät puoli litraa patavettä. Varo kortsuja! Ryhmä juo puoli litraa lämmintä lonkeroa, jossa saattaa olla kondomi.	special
+50	Etuparkki. excubussi	Joukkueen päästessä tähän ruutuun (yli menevät heitot lasketaan) excubussi vie takaisin Otaniemeen. Joukkue voi halutessaan tilata bussimatkalle juotavaa (kola, kalja, siideri, punkku). Otaniemessä joukkue saapuukin sopivasti Smökkiin sitsaamaan.	special
+51	Maarinsolmu	Joukkue saapuu Maarinsolmuun ja ostaa lasillisen hyytelöä.	food
+52	Urheilukenttä	Urheilukentän kohdalla sinne ensimmäiseksi saapunut joukkue suorittaa 110 metrin aidat eli juo kolme pulloa olutta, ennenkuin pääsee jatkamaan. Ruutua ei täydennetä!	special
+53	Ostari	Otariisto, R-Kioski ja Jamoi. Kalja ei kaupasta lopu.\nRuutu täydennetään jokaisen joukkueen jälkeen!	sauna
+54	Puunjalostajakillan kiltahuone	Vierailu puunjalostajien kiltahuoneella.\nRuutu täydennetään jokaisen joukkueen jälkeen!	guild
+55	Vuorilafkan ruokala	Vuoren ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+56	Kemman lafkan kuppila	Kemman lafkan kuppilaan saapuvaa odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+57	Koneen kiltahuone	Vierailu koneen kiltahuoneella.\nRuutu täydennetään jokaisen joukkueen jälkeen!	guild
+58	Fyssan ruokala	Fyssan ruokalaan saapuvaa odottaa tavalliseen tapaan lasillinen hyytelöä.	food
+59	Sähkön ruokala	Sähkön ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.\nRuutu täytetään jokaisen joukkueen jälkeen!	food
+60	Uimahalli	Uimahallilla juodaankin kaljan sijasta vissyä. Uimahallista ei myöskään juotava lopu.	special
+61	Pub jälkipeli	Pub Jälkipelistä ei kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.	special
+62	Keltsu	Keltsuun saapuva joukkue joutuu nauttimaan kolme pulloa kaljaa sekä lasillisen hyytelöä, ennenkuin voi jatkaa matkaa.\nRuutu täytetään jokaisen joukkueen jälkeen! Keltsusta ei juoma eikä ruoka lopu!	special
+\.
+
 COPY public.board_places (board_id, place_number, place_id, start, "end", x, y) FROM stdin;
 1	49	33	f	f	81.70000000000002	50.04999999999997
 1	50	34	f	f	85.4	43.1999999999999
@@ -374,8 +386,8 @@ COPY public.place_drinks (drink_id, place_number, board_id, refill, optional, n,
 1	50	1	t	f	1	1
 1	51	1	t	f	1	1
 1	52	1	f	f	1	1
-1	53	1	f	f	1	1
-3	54	1	t	f	2	1
+1	53	1	f	f	3	1
+3	54	1	t	f	1	1
 3	55	1	t	f	1	1
 1	56	1	f	f	1	1
 1	58	1	t	f	1	1

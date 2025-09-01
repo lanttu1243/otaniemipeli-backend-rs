@@ -77,33 +77,43 @@ CREATE TABLE turn_drinks (
     PRIMARY KEY (drink_id, turn_id)
 );
 CREATE TABLE board_places (
-    board_id        INTEGER REFERENCES boards(board_id),
-    place_number    INTEGER UNIQUE,
-    place_id        INTEGER REFERENCES places(place_id),
+    board_id        INTEGER NOT NULL REFERENCES boards(board_id) ON DELETE CASCADE,
+    place_number    INTEGER,
+    place_id        INTEGER NOT NULL REFERENCES places(place_id) ON DELETE CASCADE,
     start           BOOLEAN default FALSE,
     "end"           BOOLEAN default FALSE,
     x               FLOAT default 0.0,
     y               FLOAT default 0.0,
     PRIMARY KEY (board_id, place_number)
 );
+
 CREATE TABLE place_drinks (
-    drink_id        INTEGER REFERENCES drinks(drink_id),
-    place_number    INTEGER REFERENCES board_places(place_number),
-    board_id        INTEGER REFERENCES boards(board_id),
-    refill          BOOLEAN default FALSE,
-    optional        BOOLEAN default FALSE,
-    n               INTEGER default 1,
-    n_update        TEXT default '',
-    PRIMARY KEY (drink_id, place_number, board_id)
+    drink_id      INTEGER NOT NULL REFERENCES drinks(drink_id),
+    board_id      INTEGER NOT NULL REFERENCES boards(board_id),
+    place_number  INTEGER NOT NULL,
+    refill        BOOLEAN default FALSE,
+    optional      BOOLEAN default FALSE,
+    n             INTEGER default 1,
+    n_update      TEXT default '',
+    PRIMARY KEY (drink_id, board_id, place_number),
+    FOREIGN KEY (board_id, place_number)
+      REFERENCES board_places (board_id, place_number)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE place_connections (
     board_id        INTEGER REFERENCES boards(board_id),
-    origin          INTEGER REFERENCES board_places(place_number),
-    target          INTEGER REFERENCES board_places(place_number),
+    origin          INTEGER,
+    target          INTEGER,
     on_land         BOOLEAN default FALSE,
     backwards       BOOLEAN default FALSE,
     dashed          BOOLEAN default FALSE,
-    PRIMARY KEY (board_id, origin, target)
+    PRIMARY KEY (board_id, origin, target),
+    FOREIGN KEY (board_id, origin)
+        REFERENCES board_places (board_id, place_number)
+        ON DELETE CASCADE,
+    FOREIGN KEY (board_id, target)
+        REFERENCES board_places (board_id, place_number)
+        ON DELETE CASCADE
 );
 CREATE TABLE user_types (
     uid             INTEGER REFERENCES users(uid),

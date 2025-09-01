@@ -1,10 +1,11 @@
 use axum::extract::{Path, Query, State};
-use axum::Json;
+use axum::{Json, response::{IntoResponse, Response}};
+use http::{header, HeaderValue};
 use deadpool_postgres::Client;
 use crate::database::drinks::*;
 use crate::utils::round;
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Drink, DrinkIngredients, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery};
+use crate::utils::types::{Drink, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery};
 
 pub async fn drinks_ingredients_get(
     state: State<AppState>,
@@ -57,7 +58,7 @@ pub async fn drink_ingredient_delete(
 pub async fn drink_ingredients_get(
     Path(drink_id): Path<i32>,
     state: State<AppState>,
-) -> Result<Json<DrinkIngredients>, AppError> {
+) -> Result<Response, AppError> {
     let client: Client = state.db.get().await?;
     let drinks: Drinks = match get_drinks(&client).await {
         Ok(drinks) => drinks,
@@ -89,7 +90,13 @@ pub async fn drink_ingredients_get(
             let abv = temp / quant;
             drink_ingredients.abv = round(abv, 1);
             drink_ingredients.quantity = quant;
-            Ok(Json(drink_ingredients))
+
+            let mut resp = Json(drink_ingredients).into_response();
+            resp.headers_mut().insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("private, max-age=86400, stale-while-revalidate=3600"),
+            );
+            Ok(resp)
         },
         Err(e) => {
             eprintln!("{}", e);
