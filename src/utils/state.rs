@@ -85,7 +85,6 @@ pub async fn auth_middleware(
     req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    tracing::info!("{} {}", req.method(), req.uri().path());
     if req.method() == Method::GET {
         return Ok(next.run(req).await);
     }
@@ -112,4 +111,11 @@ pub async fn auth_middleware(
             Err(StatusCode::UNAUTHORIZED)
         }
     }
+}
+pub async fn all_middleware(
+    req: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    tracing::info!("{} {}", req.method(), req.uri().path());
+    Ok(next.run(req).await)
 }

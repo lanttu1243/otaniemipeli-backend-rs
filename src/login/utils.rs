@@ -45,7 +45,6 @@ pub async fn verify_session(
     state: State<AppState>,
     headers: HeaderMap,
 ) -> Result<Json<SessionInfo>, AppError>  {
-    println!("UPDATE /login");
 
     let client = state.db.get().await?;
     let auth_hash = get_auth(&headers).await;
@@ -67,7 +66,6 @@ pub async fn end_session(
     state: State<AppState>,
     headers: HeaderMap,
 ) -> Result<Json<()>, AppError> {
-    println!("DELETE /login");
     let client = state.db.get().await?;
     let auth_hash = get_auth(&headers).await;
     if auth_hash == "" {
@@ -83,7 +81,6 @@ pub async fn end_all_sessions(
     state: State<AppState>,
     headers: HeaderMap
 ) -> Result<Json<()>, AppError> {
-    println!("DELETE /logout");
     let client = state.db.get().await?;
     let auth_hash = get_auth(&headers).await;
     if auth_hash == "" {

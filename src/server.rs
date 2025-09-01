@@ -16,7 +16,7 @@ use socketioxide::{
 };
 use tracing_subscriber::FmtSubscriber;
 
-use crate::utils::state::{auth_middleware, AppState};
+use crate::utils::state::{all_middleware, auth_middleware, AppState};
 
 #[derive(Debug, serde::Deserialize)]
 pub(crate) struct MessageIn {
@@ -73,6 +73,7 @@ pub async fn start() -> anyhow::Result<()> {
         .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
         .nest("/login", login_router())
         .nest("/api", api_router(state.clone()))
+        .layer(middleware::from_fn(all_middleware))
         .with_state(state)
         .layer(layer)
         .layer(cors);

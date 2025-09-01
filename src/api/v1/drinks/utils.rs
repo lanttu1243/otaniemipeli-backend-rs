@@ -23,10 +23,11 @@ pub async fn drinks_post(
     state: State<AppState>,
     Json(drink): Json<Drink>,
 ) -> Result<Json<Drink>, AppError> {
+    tracing::info!("{} {}", drink.name, drink.id);
     let client: Client = state.db.get().await?;
     match post_drink(&client, drink.clone()).await {
         Err(e) => {
-            eprintln!("{}", e);
+            tracing::error!("{}", e);
             Err(AppError::Database("Database operations encountered an error!".parse().unwrap()))
         },
         _ => Ok(Json(drink))

@@ -3,7 +3,7 @@ use axum::{Json as AxumJson};
 use deadpool_postgres::Client;
 use crate::database::boards::{add_place, get_board_places, get_places, update_coordinates};
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Board, BoardPlace, BoardPlaces, Place, Places};
+use crate::utils::types::{BoardPlace, BoardPlaces, Place, Places};
 
 pub async fn board_places_get(
     Path(board_id): Path<i32>,
@@ -20,8 +20,6 @@ pub async fn places_post(
     state: State<AppState>,
     AxumJson(place): AxumJson<Place>,
 ) -> Result<AxumJson<Place>, AppError> {
-    println!("POST /boards/places");
-
     let client: Client = state.db.get().await?;
     match add_place(&client, place.clone()).await {
         Err(e) => {
@@ -46,8 +44,6 @@ pub async fn coordinate_patch(
     state: State<AppState>,
     AxumJson(place): AxumJson<BoardPlace>,
 ) -> Result<AxumJson<u64>, AppError> {
-    println!("PATCH /boards/places/{board_id}");
-
     let client: Client = state.db.get().await?;
     match update_coordinates(&client, board_id, &place).await {
         Ok(x) => Ok(AxumJson(x)),
