@@ -374,8 +374,8 @@ COPY public.place_drinks (drink_id, place_number, board_id, refill, optional, n,
 1	50	1	t	f	1	1
 1	51	1	t	f	1	1
 1	52	1	f	f	1	1
-1	53	1	f	f	3	1
-3	54	1	t	f	1	1
+1	53	1	f	f	1	1
+3	54	1	t	f	2	1
 3	55	1	t	f	1	1
 1	56	1	f	f	1	1
 1	58	1	t	f	1	1

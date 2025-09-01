@@ -2,6 +2,7 @@ use axum::extract::{Path, Query, State};
 use axum::Json;
 use deadpool_postgres::Client;
 use crate::database::drinks::*;
+use crate::utils::round;
 use crate::utils::state::{AppError, AppState};
 use crate::utils::types::{Drink, DrinkIngredients, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery};
 
@@ -78,7 +79,18 @@ pub async fn drink_ingredients_get(
         }
     }
     match get_drink_ingredients(&client, drink.unwrap()).await {
-        Ok(drink_ingredients) => Ok(Json(drink_ingredients)),
+        Ok(mut drink_ingredients) => {
+            let mut quant: f64 = 0.0;
+            let mut temp: f64 = 0.0;
+            for drink_ingredient in &drink_ingredients.ingredients {
+                quant += &drink_ingredient.quantity;
+                temp += &drink_ingredient.quantity * &drink_ingredient.ingredient.abv;
+            }
+            let abv = temp / quant;
+            drink_ingredients.abv = round(abv, 1);
+            drink_ingredients.quantity = quant;
+            Ok(Json(drink_ingredients))
+        },
         Err(e) => {
             eprintln!("{}", e);
             Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
