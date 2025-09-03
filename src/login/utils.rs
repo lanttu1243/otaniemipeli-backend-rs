@@ -108,6 +108,9 @@ pub async fn create_user(
     headers: HeaderMap,
     Json(user_info): Json<UserCreateInfo>
 ) -> Result<Json<UserSessionInfo>, AppError> {
+    if user_info.password == "" || user_info.username == "" || user_info.email == "" {
+        return Err(AppError::Internal)
+    }
     let client = state.db.get().await?;
     let auth_hash = get_auth(&headers).await;
     let user_exist = match users_exist(&client).await {
@@ -130,7 +133,7 @@ pub async fn create_user(
         return Err(AppError::Conflict(msg));
     }
     if !user_exist {
-        return match user_create(&client, user_info).await {
+        match user_create(&client, user_info).await {
             Ok((user, session)) => {
                 Ok(Json(
                     UserSessionInfo {
