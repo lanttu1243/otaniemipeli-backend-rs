@@ -1,24 +1,33 @@
-use axum::extract::{Path, Query, State};
-use axum::{Json, response::{IntoResponse, Response}};
-use http::{header, HeaderValue};
-use deadpool_postgres::Client;
 use crate::database::drinks::*;
 use crate::utils::round;
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Drink, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery};
+use crate::utils::types::{
+    Drink, DrinkIngredientsPost, Drinks, DrinksIngredients, Ingredient, IngredientIdQuery,
+};
+use axum::extract::{Path, Query, State};
+use axum::{
+    response::{IntoResponse, Response},
+    Json,
+};
+use deadpool_postgres::Client;
+use http::{header, HeaderValue};
 
 pub async fn drinks_ingredients_get(
     state: State<AppState>,
 ) -> Result<Json<DrinksIngredients>, AppError> {
     let client: Client = state.db.get().await?;
     match get_drinks_ingredients(&client).await {
-        Ok(drinks_ingredients) if drinks_ingredients.drink_ingredients.is_empty() => {
-            Err(AppError::NotFound(String::from("No drinks with ingredients")))
-        },
+        Ok(drinks_ingredients) if drinks_ingredients.drink_ingredients.is_empty() => Err(
+            AppError::NotFound(String::from("No drinks with ingredients")),
+        ),
         Ok(drinks_ingredients) => Ok(Json(drinks_ingredients)),
         Err(e) => {
             eprintln!("{}", e);
-            Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            Err(AppError::Database(
+                "The server encountered an unexpected error!"
+                    .parse()
+                    .unwrap(),
+            ))
         }
     }
 }
@@ -30,9 +39,11 @@ pub async fn drink_ingredients_post(
     match add_ingredients(&client, drink_ingredients.clone()).await {
         Err(e) => {
             eprintln!("{}", e);
-            Err(AppError::Database("Database operations encountered an error!".parse().unwrap()))
-        },
-        _ => Ok(Json(drink_ingredients))
+            Err(AppError::Database(
+                "Database operations encountered an error!".parse().unwrap(),
+            ))
+        }
+        _ => Ok(Json(drink_ingredients)),
     }
 }
 pub async fn drink_ingredient_delete(
@@ -43,16 +54,19 @@ pub async fn drink_ingredient_delete(
     let ingredient_id: i32 = query.ingredient_id;
     let client: Client = state.db.get().await?;
     match delete_ingredient_from_drink(&client, drink_id, ingredient_id).await {
-        Ok(_) => Ok(
-            Json(match get_ingredient(&client, ingredient_id).await {
-                Ok(ingredient) => ingredient,
-                Err(e) => {
-                    eprintln!("{}", e);
-                    return Err(AppError::Database(format!("Ingredient {} not in database!", ingredient_id)))
-                }
+        Ok(_) => Ok(Json(match get_ingredient(&client, ingredient_id).await {
+            Ok(ingredient) => ingredient,
+            Err(e) => {
+                eprintln!("{}", e);
+                return Err(AppError::Database(format!(
+                    "Ingredient {} not in database!",
+                    ingredient_id
+                )));
             }
-            )),
-        Err(_) => Err(AppError::Database(format!("Ingredient {ingredient_id} not in database!"))),
+        })),
+        Err(_) => Err(AppError::Database(format!(
+            "Ingredient {ingredient_id} not in database!"
+        ))),
     }
 }
 pub async fn drink_ingredients_get(
@@ -64,19 +78,27 @@ pub async fn drink_ingredients_get(
         Ok(drinks) => drinks,
         Err(e) => {
             eprintln!("{}", e);
-            return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            return Err(AppError::Database(
+                "The server encountered an unexpected error!"
+                    .parse()
+                    .unwrap(),
+            ));
         }
     };
-    let mut drink: Option<Drink> =  None;
+    let mut drink: Option<Drink> = None;
     for drink_from in drinks.drinks {
         if drink_from.id == drink_id {
             drink = Some(drink_from);
         }
-    };
+    }
     match drink {
-        Some(_) => {},
+        Some(_) => {}
         None => {
-            return Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            return Err(AppError::Database(
+                "The server encountered an unexpected error!"
+                    .parse()
+                    .unwrap(),
+            ))
         }
     }
     match get_drink_ingredients(&client, drink.unwrap()).await {
@@ -97,10 +119,14 @@ pub async fn drink_ingredients_get(
                 HeaderValue::from_static("private, max-age=86400, stale-while-revalidate=3600"),
             );
             Ok(resp)
-        },
+        }
         Err(e) => {
             eprintln!("{}", e);
-            Err(AppError::Database("The server encountered an unexpected error!".parse().unwrap()))
+            Err(AppError::Database(
+                "The server encountered an unexpected error!"
+                    .parse()
+                    .unwrap(),
+            ))
         }
     }
 }

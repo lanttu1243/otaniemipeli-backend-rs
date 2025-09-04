@@ -1,19 +1,15 @@
-use std::env;
-use crate::api::router as api_router;
 use crate::api::referee as referee_server;
-use crate::login::router as login_router;
+use crate::api::router as api_router;
 use crate::database::utils::make_pool;
-use tokio::{
-    net::TcpListener,
-};
-use http::{Method, header};
-use tower_http::cors::CorsLayer;
+use crate::login::router as login_router;
 use http::HeaderValue;
+use http::{header, Method};
+use std::env;
+use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 
 use axum::{middleware, routing::get, Router};
-use socketioxide::{
-    SocketIo,
-};
+use socketioxide::SocketIo;
 use tracing_subscriber::FmtSubscriber;
 
 use crate::utils::state::{all_middleware, auth_middleware, AppState};
@@ -31,7 +27,6 @@ pub struct TokenStore {
 }
 
 pub async fn start() -> anyhow::Result<()> {
-
     tracing::subscriber::set_global_default(FmtSubscriber::default())?;
 
     dotenvy::dotenv().ok();
@@ -47,13 +42,19 @@ pub async fn start() -> anyhow::Result<()> {
         Ok(pool) => pool,
         Err(_) => panic!("Failed to create pool"),
     };
-    let frontend_url = env::var("FRONTEND_URL")
-        .unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let frontend_url =
+        env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
 
-    let origin = HeaderValue::from_str(&frontend_url)
-        .expect("FRONTEND_URL must be a valid Origin header");
+    let origin =
+        HeaderValue::from_str(&frontend_url).expect("FRONTEND_URL must be a valid Origin header");
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         // list the exact dev origins you use (no '*' if credentials are used)
         .allow_origin([origin])
@@ -64,13 +65,14 @@ pub async fn start() -> anyhow::Result<()> {
 
     let state = AppState::new(pool);
 
-    let (layer, io) = SocketIo::builder()
-        .with_state(state.clone())
-        .build_layer();
+    let (layer, io) = SocketIo::builder().with_state(state.clone()).build_layer();
     io.ns("/referee", referee_server::referee_on_connect);
 
     let app = Router::new()
-        .route("/", get(|| async { "The backend for Otaniemipeli is up and running..." }))
+        .route(
+            "/",
+            get(|| async { "The backend for Otaniemipeli is up and running..." }),
+        )
         .nest("/login", login_router())
         .nest("/api", api_router(state.clone()))
         .layer(middleware::from_fn(all_middleware))

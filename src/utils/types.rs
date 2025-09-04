@@ -1,6 +1,6 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::types::{FromSql, ToSql};
-use chrono::{DateTime, Utc};
 pub type PgError = tokio_postgres::error::Error;
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
 #[postgres(name = "placetype")]
@@ -18,7 +18,9 @@ pub enum PlaceType {
     guild,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SocketAuth { pub token: String }
+pub struct SocketAuth {
+    pub token: String,
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MessageBack {
     pub ok: bool,
@@ -92,7 +94,9 @@ pub struct UserTypes {
 }
 impl UserTypes {
     pub fn new() -> Self {
-        Self { user_types: Vec::new() }
+        Self {
+            user_types: Vec::new(),
+        }
     }
     pub fn push(&mut self, user_type: UserType) {
         self.user_types.push(user_type);
@@ -128,7 +132,7 @@ pub struct Boards {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BoardPlaces {
     pub board: Board,
-    pub places: Vec<BoardPlace>
+    pub places: Vec<BoardPlace>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Place {
@@ -151,11 +155,11 @@ pub struct BoardPlace {
     pub x: f64,
     pub y: f64,
     pub connections: Vec<Connection>,
-    pub drinks: PlaceDrinks
+    pub drinks: PlaceDrinks,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PlaceDrinks {
-    pub drinks: Vec <PlaceDrink>
+    pub drinks: Vec<PlaceDrink>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PlaceDrink {

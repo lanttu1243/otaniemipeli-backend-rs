@@ -1,10 +1,10 @@
-use axum::Router;
 use crate::utils::state::AppState;
+use axum::Router;
 
-pub mod ingredients;
+pub mod boards;
 pub mod drinks;
 pub mod games;
-pub mod boards;
+pub mod ingredients;
 
 pub fn router() -> Router<AppState> {
     Router::new()

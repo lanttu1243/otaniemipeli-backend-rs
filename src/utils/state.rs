@@ -1,16 +1,16 @@
-use deadpool_postgres::Pool;
+use crate::database::login::check_session;
+use axum::body::Body;
+use axum::extract::State;
+use axum::middleware::Next;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     Json,
 };
-use axum::body::Body;
-use axum::extract::{State};
-use axum::middleware::Next;
+use deadpool_postgres::Pool;
 use http::{Method, Request};
 use serde::Serialize;
 use thiserror::Error;
-use crate::database::login::check_session;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -50,12 +50,15 @@ impl IntoResponse for AppError {
         tracing::error!("AppError -> \n\t{:?}: \n\t\t{}", self_code(&self), self);
 
         let (status, msg) = match self {
-            AppError::Validation(m)   => (StatusCode::BAD_REQUEST, m),
+            AppError::Validation(m) => (StatusCode::BAD_REQUEST, m),
             AppError::Database(m) => (StatusCode::INTERNAL_SERVER_ERROR, m),
-            AppError::Conflict(m)     => (StatusCode::CONFLICT, m),
-            AppError::NotFound(m)     => (StatusCode::NOT_FOUND, m),
-            AppError::RateLimited     => (StatusCode::TOO_MANY_REQUESTS, "too many requests".into()),
-            AppError::Internal        => (StatusCode::INTERNAL_SERVER_ERROR, "internal server error".into()),
+            AppError::Conflict(m) => (StatusCode::CONFLICT, m),
+            AppError::NotFound(m) => (StatusCode::NOT_FOUND, m),
+            AppError::RateLimited => (StatusCode::TOO_MANY_REQUESTS, "too many requests".into()),
+            AppError::Internal => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "internal server error".into(),
+            ),
             AppError::Unauthorized(m) => (StatusCode::UNAUTHORIZED, m),
         };
         (status, Json(ErrorBody { error: msg })).into_response()
@@ -96,26 +99,17 @@ pub async fn auth_middleware(
         }
     };
     match req.headers().get(http::header::AUTHORIZATION) {
-        Some(auth_header) => {
-            match check_session(auth_header.to_str().unwrap(), &client).await {
-                Ok(_) => {
-                    Ok(next.run(req).await)
-                },
-                Err(e) => {
-                    eprintln!("{e}");
-                    Err(StatusCode::INTERNAL_SERVER_ERROR)
-                }
+        Some(auth_header) => match check_session(auth_header.to_str().unwrap(), &client).await {
+            Ok(_) => Ok(next.run(req).await),
+            Err(e) => {
+                eprintln!("{e}");
+                Err(StatusCode::INTERNAL_SERVER_ERROR)
             }
         },
-        None => {
-            Err(StatusCode::UNAUTHORIZED)
-        }
+        None => Err(StatusCode::UNAUTHORIZED),
     }
 }
-pub async fn all_middleware(
-    req: Request<Body>,
-    next: Next,
-) -> Result<Response, StatusCode> {
+pub async fn all_middleware(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     tracing::info!("{} {}", req.method(), req.uri().path());
     Ok(next.run(req).await)
 }

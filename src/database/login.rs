@@ -1,10 +1,12 @@
-use std::env;
+use crate::utils::types::{
+    LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UserTypes,
+};
 use chrono::prelude::*;
 use rand::distr::Alphanumeric;
 use rand::Rng;
+use sha2::{Digest, Sha256};
+use std::env;
 use tokio_postgres::Client;
-use crate::utils::types::{LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UserTypes};
-use sha2::{Sha256, Digest};
 
 fn hash_password(pw: String) -> String {
     let salt: String = rand::rng()
@@ -25,7 +27,10 @@ fn compare_pw_to_db(pw_post: String, pw_db: String) -> bool {
     pw_hash == pw_db
 }
 
-pub async fn post_login_db(login_info: LoginInfo, client: &Client) -> Result<(UserInfo, String), PgError> {
+pub async fn post_login_db(
+    login_info: LoginInfo,
+    client: &Client,
+) -> Result<(UserInfo, String), PgError> {
     let query_str = "\
     SELECT \
         u.uid, \
@@ -47,19 +52,21 @@ pub async fn post_login_db(login_info: LoginInfo, client: &Client) -> Result<(Us
 
     let query = match client.query(query_str, &[&login_info.username]).await {
         Ok(r) => {
-            if r.len() == 0 {return Ok((user, "".to_string()))}
+            if r.len() == 0 {
+                return Ok((user, "".to_string()));
+            }
             match r[0].clone().try_get::<usize, String>(3) {
                 Ok(pw) => {
                     if compare_pw_to_db(login_info.password, pw) {
                         r
                     } else {
-                        return Ok((user, "".to_string()))
+                        return Ok((user, "".to_string()));
                     }
-                },
+                }
                 Err(_) => return Ok((user, "".to_string())),
             }
-        },
-        Err(e) => return Err(e)
+        }
+        Err(e) => return Err(e),
     };
     for row in query {
         match row.try_get::<usize, i32>(0) {
@@ -75,7 +82,9 @@ pub async fn post_login_db(login_info: LoginInfo, client: &Client) -> Result<(Us
             Err(_) => continue,
         }
     }
-    let session_hash = create_session(user.uid, client).await.unwrap_or_else(|_| "".to_string());
+    let session_hash = create_session(user.uid, client)
+        .await
+        .unwrap_or_else(|_| "".to_string());
     Ok((user, session_hash))
 }
 
@@ -111,7 +120,7 @@ pub async fn update_session(session_hash: &str, client: &Client) -> Result<(u64,
 
     let delete_query = "DELETE FROM sessions WHERE expires < now()";
 
-    let update    = client.execute(update_query, &[&session_hash]).await?;
+    let update = client.execute(update_query, &[&session_hash]).await?;
     let delete = client.execute(delete_query, &[]).await?;
 
     Ok((update, delete))
@@ -127,14 +136,14 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
          WHERE s.session_hash = $1 AND s.expires > now()";
 
     match update_session(session_hash, client).await {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             println!("{e}");
         }
     }
     let query = match client.query(query_str, &[&session_hash]).await {
         Ok(r) => r,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
     let mut session: SessionInfo = SessionInfo {
         uid: -404,
@@ -148,16 +157,16 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
                 session.session_hash = row.get(1);
                 session.user_types.push(row.get(2));
                 match row.try_get::<usize, UserType>(2) {
-                    Ok(_) =>{},
+                    Ok(_) => {}
                     Err(e) => println!("{e}"),
                 }
             }
             Err(e) => {
                 println!("{e}");
-                continue
-            },
+                continue;
+            }
         }
-    };
+    }
     let ses = session.clone();
     Ok(ses)
 }
@@ -175,9 +184,7 @@ pub async fn users_exist(client: &Client) -> Result<bool, PgError> {
     let query_str = "\
     SELECT EXISTS (SELECT 1 FROM users)";
 
-    let row = client
-        .query_one(query_str, &[])
-        .await?;
+    let row = client.query_one(query_str, &[]).await?;
 
     let exists: bool = row.get(0);
     Ok(exists)
@@ -198,41 +205,55 @@ pub async fn email_or_username_exist(
         Ok(true)
     }
 }
-pub async fn user_create(client: &Client, mut user_info: UserCreateInfo) -> Result<(UserInfo, SessionInfo), PgError> {
+pub async fn user_create(
+    client: &Client,
+    mut user_info: UserCreateInfo,
+) -> Result<(UserInfo, SessionInfo), PgError> {
     let query_str = "\
     INSERT INTO users \
     (username, email, password) values ($1, $2, $3)";
     let original_password = user_info.password.clone();
     user_info.password = hash_password(user_info.password);
-    match client.execute(query_str, &[&user_info.username, &user_info.email, &user_info.password]).await {
-        Ok(_) => {},
-        Err(e) => return Err(e)
+    match client
+        .execute(
+            query_str,
+            &[&user_info.username, &user_info.email, &user_info.password],
+        )
+        .await
+    {
+        Ok(_) => {}
+        Err(e) => return Err(e),
     };
     let user_session = post_login_db(
         LoginInfo {
             username: user_info.username,
             password: original_password,
-        }, client).await?;
+        },
+        client,
+    )
+    .await?;
     let user = user_session.0;
     let auth = user_session.1;
 
     let query_str2 = "\
     INSERT INTO user_types (uid, user_type) VALUES ($1, $2)";
-    return match client.execute(query_str2, &[&user.uid, &user_info.user_type]).await {
-        Ok(_) => {
-            match check_session(&auth, client).await {
-                Ok(s) => {
-                    Ok((user, s))
-                },
-                Err(e) => Err(e)
-            }
+    return match client
+        .execute(query_str2, &[&user.uid, &user_info.user_type])
+        .await
+    {
+        Ok(_) => match check_session(&auth, client).await {
+            Ok(s) => Ok((user, s)),
+            Err(e) => Err(e),
         },
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     };
 
-    Ok((user, SessionInfo {
-        uid: -1,
-        session_hash: "".to_string(),
-        user_types: UserTypes::new(),
-    }))
+    Ok((
+        user,
+        SessionInfo {
+            uid: -1,
+            session_hash: "".to_string(),
+            user_types: UserTypes::new(),
+        },
+    ))
 }

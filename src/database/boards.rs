@@ -1,7 +1,6 @@
-use deadpool_postgres::{Client};
 use crate::utils::types::*;
+use deadpool_postgres::Client;
 pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
-
     let query_str = "\
     SELECT board_id, name FROM boards;";
 
@@ -19,10 +18,9 @@ pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
         };
         boards.push(board);
     }
-    Ok(Boards {boards})
+    Ok(Boards { boards })
 }
 pub async fn get_places(client: &Client) -> Result<Places, PgError> {
-
     let query_str = "\
     SELECT place_id, place_name, place_type, rule FROM places;";
 
@@ -55,13 +53,12 @@ pub async fn get_board(client: &Client, board_id: i32) -> Result<Board, PgError>
         return Ok(Board {
             id: -1,
             name: "No Boards!".to_string(),
-        })
+        });
     }
     Ok(Board {
         id: query.first().unwrap().get(0),
-        name: query.first().unwrap().get(1)
+        name: query.first().unwrap().get(1),
     })
-    
 }
 
 pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPlaces, PgError> {
@@ -90,44 +87,45 @@ pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPla
 
     let query = match client.query(query_str, &[&board_id]).await {
         Ok(r) => r,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
     for row in query {
         match row.try_get::<usize, i32>(0) {
-            Ok(_) => {
-                board_places.places.push(
-                    BoardPlace {
-                        board_id,
-                        place: Place {
-                            place_id: row.get(1),
-                            place_name: row.get(2),
-                            rule: row.get(3),
-                            place_type: row.get(4),
-                        },
-                        place_number: row.get(5),
-                        start: row.get(6),
-                        end: row.get(7),
-                        x: row.get(8),
-                        y: row.get(9),
-                        connections: match get_board_place_connections(&client, board_id, row.get(5)).await {
-                            Ok(r) => r,
-                            Err(e) => return Err(e),
-                        },
-                        drinks: {
-                            match get_place_drinks(&client, row.get(5), board_id).await {
-                                Ok(r) => r,
-                                Err(e) => return Err(e),
-                            }
-                        }
+            Ok(_) => board_places.places.push(BoardPlace {
+                board_id,
+                place: Place {
+                    place_id: row.get(1),
+                    place_name: row.get(2),
+                    rule: row.get(3),
+                    place_type: row.get(4),
+                },
+                place_number: row.get(5),
+                start: row.get(6),
+                end: row.get(7),
+                x: row.get(8),
+                y: row.get(9),
+                connections: match get_board_place_connections(&client, board_id, row.get(5)).await
+                {
+                    Ok(r) => r,
+                    Err(e) => return Err(e),
+                },
+                drinks: {
+                    match get_place_drinks(&client, row.get(5), board_id).await {
+                        Ok(r) => r,
+                        Err(e) => return Err(e),
                     }
-                )
-            }
+                },
+            }),
             Err(_) => continue,
         }
     }
     Ok(board_places)
 }
-pub async fn get_place_drinks(client: &Client, place_number: i32, board_id: i32) -> Result<PlaceDrinks, PgError> {
+pub async fn get_place_drinks(
+    client: &Client,
+    place_number: i32,
+    board_id: i32,
+) -> Result<PlaceDrinks, PgError> {
     let mut drinks: PlaceDrinks = PlaceDrinks { drinks: Vec::new() };
     let query_str = "\
     SELECT \
@@ -146,44 +144,56 @@ pub async fn get_place_drinks(client: &Client, place_number: i32, board_id: i32)
 
     let query = match client.query(query_str, &[&place_number, &board_id]).await {
         Ok(r) => r,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
 
     for row in query {
         match row.try_get::<usize, i32>(0) {
-            Ok(_) => {
-                drinks.drinks.push(
-                    PlaceDrink {
-                        place_number: row.get(0),
-                        board_id: row.get(1),
-                        drink: Drink {
-                            id: row.get(2),
-                            name: row.get(3),
-                        },
-                        refill: row.get(4),
-                        optional: row.get(5),
-                        n: row.get(6),
-                        n_update: row.get(7),
-                    }
-                )
-            }
+            Ok(_) => drinks.drinks.push(PlaceDrink {
+                place_number: row.get(0),
+                board_id: row.get(1),
+                drink: Drink {
+                    id: row.get(2),
+                    name: row.get(3),
+                },
+                refill: row.get(4),
+                optional: row.get(5),
+                n: row.get(6),
+                n_update: row.get(7),
+            }),
             Err(_) => continue,
         }
     }
     Ok(drinks)
 }
 pub async fn add_place_drinks(client: &Client, drinks: PlaceDrinks) -> Result<u64, PgError> {
-
     let query_str = "\
     INSERT INTO place_drinks (drink_id, place_number, board_id, refill, optional, n, n_update) \
     VALUES ($1, $2, $3, $4, $5, $6, $7)";
 
     for drink in &drinks.drinks {
-        client.execute(query_str, &[&drink.drink.id, &drink.place_number, &drink.board_id, &drink.refill, &drink.optional, &drink.n, &drink.n_update]).await?;
+        client
+            .execute(
+                query_str,
+                &[
+                    &drink.drink.id,
+                    &drink.place_number,
+                    &drink.board_id,
+                    &drink.refill,
+                    &drink.optional,
+                    &drink.n,
+                    &drink.n_update,
+                ],
+            )
+            .await?;
     }
     Ok(drinks.drinks.len() as u64)
 }
-pub async fn get_board_place_connections(client: &Client, board_id: i32, place_number: i32) -> Result<Vec<Connection>, PgError> {
+pub async fn get_board_place_connections(
+    client: &Client,
+    board_id: i32,
+    place_number: i32,
+) -> Result<Vec<Connection>, PgError> {
     let mut connections: Vec<Connection> = Vec::new();
     let query_str = "\
     SELECT \
@@ -199,22 +209,18 @@ pub async fn get_board_place_connections(client: &Client, board_id: i32, place_n
 
     let query = match client.query(query_str, &[&board_id, &place_number]).await {
         Ok(r) => r,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
     for row in query {
         match row.try_get::<usize, i32>(0) {
-            Ok(_) => {
-                connections.push(
-                    Connection {
-                        board_id: row.get(0),
-                        origin: row.get(1),
-                        target: row.get(2),
-                        on_land: row.get(3),
-                        backwards: row.get(4),
-                        dashed: row.get(5),
-                    }
-                )
-            }
+            Ok(_) => connections.push(Connection {
+                board_id: row.get(0),
+                origin: row.get(1),
+                target: row.get(2),
+                on_land: row.get(3),
+                backwards: row.get(4),
+                dashed: row.get(5),
+            }),
             Err(e) => return Err(e),
         }
     }
@@ -225,18 +231,49 @@ pub async fn add_place(client: &Client, place: Place) -> Result<u64, PgError> {
     INSERT INTO places (place_name, rule, place_type) \
     VALUES ($1, $2, $3)";
 
-    client.execute(query_str, &[&place.place_name, &place.rule, &place.place_type]).await
+    client
+        .execute(
+            query_str,
+            &[&place.place_name, &place.rule, &place.place_type],
+        )
+        .await
 }
-pub async fn add_board_place(client: &Client, board_id: i32, place: BoardPlace) -> Result<u64, PgError> {
+pub async fn add_board_place(
+    client: &Client,
+    board_id: i32,
+    place: BoardPlace,
+) -> Result<u64, PgError> {
     let query_str = "\
     INSERT INTO board_places (board_id, place_number, place_id, start, \"end\", x, y) \
     VALUES ($1, $2, $3, $4, $5, $6, $7)";
 
-    client.execute(query_str, &[&board_id, &place.place_number, &place.place.place_id, &place.start, &place.end, &place.x, &place.y] ).await
+    client
+        .execute(
+            query_str,
+            &[
+                &board_id,
+                &place.place_number,
+                &place.place.place_id,
+                &place.start,
+                &place.end,
+                &place.x,
+                &place.y,
+            ],
+        )
+        .await
 }
-pub async fn update_coordinates(client: &Client, board_id: i32, place: &BoardPlace) -> Result<u64, PgError> {
+pub async fn update_coordinates(
+    client: &Client,
+    board_id: i32,
+    place: &BoardPlace,
+) -> Result<u64, PgError> {
     let query_str = "\
     UPDATE board_places SET x = $1, y = $2 WHERE board_id = $3 AND place_number = $4";
 
-    client.execute(query_str, &[&place.x, &place.y, &board_id, &place.place_number]).await
+    client
+        .execute(
+            query_str,
+            &[&place.x, &place.y, &board_id, &place.place_number],
+        )
+        .await
 }
