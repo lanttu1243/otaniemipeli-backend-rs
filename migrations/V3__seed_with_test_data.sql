@@ -129,16 +129,16 @@ INSERT INTO public.places (place_name, rule, place_type) VALUES
                                                              ('Etuparkki. excubussi','Joukkueen päästessä tähän ruutuun (yli menevät heitot lasketaan) excubussi vie takaisin Otaniemeen. Joukkue voi halutessaan tilata bussimatkalle juotavaa (kola, kalja, siideri, punkku). Otaniemessä joukkue saapuukin sopivasti Smökkiin sitsaamaan.','special'),
                                                              ('Maarinsolmu','Joukkue saapuu Maarinsolmuun ja ostaa lasillisen hyytelöä.','food'),
                                                              ('Urheilukenttä','Urheilukentän kohdalla sinne ensimmäiseksi saapunut joukkue suorittaa 110 metrin aidat eli juo kolme pulloa olutta, ennenkuin pääsee jatkamaan. Ruutua ei täydennetä!','special'),
-                                                             ('Ostari','Otariisto, R-Kioski ja Jamoi. Kalja ei kaupasta lopu.\nRuutu täydennetään jokaisen joukkueen jälkeen!','sauna'),
-                                                             ('Puunjalostajakillan kiltahuone','Vierailu puunjalostajien kiltahuoneella.\nRuutu täydennetään jokaisen joukkueen jälkeen!','guild'),
+                                                             ('Ostari','Otariisto, R-Kioski ja Jamoi. Kalja ei kaupasta lopu.Ruutu täydennetään jokaisen joukkueen jälkeen!','sauna'),
+                                                             ('Puunjalostajakillan kiltahuone','Vierailu puunjalostajien kiltahuoneella.Ruutu täydennetään jokaisen joukkueen jälkeen!','guild'),
                                                              ('Vuorilafkan ruokala','Vuoren ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.','food'),
                                                              ('Kemman lafkan kuppila','Kemman lafkan kuppilaan saapuvaa odottaa tavalliseen tapaan lasillinen hyytelöä.','food'),
-                                                             ('Koneen kiltahuone','Vierailu koneen kiltahuoneella.\nRuutu täydennetään jokaisen joukkueen jälkeen!','guild'),
+                                                             ('Koneen kiltahuone','Vierailu koneen kiltahuoneella.Ruutu täydennetään jokaisen joukkueen jälkeen!','guild'),
                                                              ('Fyssan ruokala','Fyssan ruokalaan saapuvaa odottaa tavalliseen tapaan lasillinen hyytelöä.','food'),
-                                                             ('Sähkön ruokala','Sähkön ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.\nRuutu täytetään jokaisen joukkueen jälkeen!','food'),
+                                                             ('Sähkön ruokala','Sähkön ruokalaan saapuvaa joukkuetta odottaa tavalliseen tapaan lasillinen hyytelöä.Ruutu täytetään jokaisen joukkueen jälkeen!','food'),
                                                              ('Uimahalli','Uimahallilla juodaankin kaljan sijasta vissyä. Uimahallista ei myöskään juotava lopu.','special'),
                                                              ('Pub jälkipeli','Pub Jälkipelistä ei kalja lopu, eli ruutu täytetään jokaisen joukkueen jälkeen.','special'),
-                                                             ('Keltsu','Keltsuun saapuva joukkue joutuu nauttimaan kolme pulloa kaljaa sekä lasillisen hyytelöä, ennenkuin voi jatkaa matkaa.\nRuutu täytetään jokaisen joukkueen jälkeen! Keltsusta ei juoma eikä ruoka lopu!','special'),
+                                                             ('Keltsu','Keltsuun saapuva joukkue joutuu nauttimaan kolme pulloa kaljaa sekä lasillisen hyytelöä, ennenkuin voi jatkaa matkaa.Ruutu täytetään jokaisen joukkueen jälkeen! Keltsusta ei juoma eikä ruoka lopu!','special'),
                                                              ('OUBS', 'OUBS:iin saapuvaa joukkuetta odottaa kaljapullon sijasta snapsillinen Fernet-Brancaa (voidaan hätätapauksissa korvata Minttu-Fernetillä).', 'special');
 
 
