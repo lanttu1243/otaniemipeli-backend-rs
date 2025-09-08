@@ -1,6 +1,6 @@
-use crate::database::boards::{add_board_place, get_board, get_boards};
+use crate::database::boards::{add_board_place, get_board, get_boards, post_board};
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Board, BoardPlace, Boards, Place};
+use crate::utils::types::{Board, BoardPlace, Boards};
 use axum::extract::{Path, State};
 use axum::Json;
 use deadpool_postgres::Client;
@@ -20,6 +20,16 @@ pub async fn boards_get_id(
     match get_board(&client, board_id).await {
         Ok(board) => Ok(Json(board)),
         Err(_) => Err(AppError::Database("Error getting places!".to_string())),
+    }
+}
+pub async fn boards_post(
+    state: State<AppState>,
+    Json(board): Json<Board>,
+) -> Result<Json<u64>, AppError> {
+    let client: Client = state.db.get().await?;
+    match post_board(&client, board).await {
+        Ok(success) => Ok(Json(success)),
+        Err(_) => Err(AppError::Database("Error posting board!".to_string())),
     }
 }
 pub async fn board_place_post(

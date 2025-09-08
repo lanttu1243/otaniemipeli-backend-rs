@@ -1,5 +1,6 @@
+use crate::api::v1::boards::utils::boards_post;
 use crate::utils::state::AppState;
-use axum::routing::{delete, get, post};
+use axum::routing::get;
 use axum::Router;
 
 pub mod utils;
@@ -11,5 +12,5 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .nest("/places", places::router())
         .route("/{id}", get(boards_get_id))
-        .route("/", get(boards_get))
+        .route("/", get(boards_get).post(boards_post))
 }

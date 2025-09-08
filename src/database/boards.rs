@@ -45,10 +45,7 @@ pub async fn get_places(client: &Client) -> Result<Places, PgError> {
 pub async fn get_board(client: &Client, board_id: i32) -> Result<Board, PgError> {
     let query_str = "\
     SELECT board_id, name FROM boards WHERE board_id = $1";
-    let query = match client.query(query_str, &[&board_id]).await {
-        Ok(r) => r,
-        Err(e) => return Err(e),
-    };
+    let query = client.query(query_str, &[&board_id]).await?;
     if query.len() == 0 {
         return Ok(Board {
             id: -1,
@@ -59,6 +56,11 @@ pub async fn get_board(client: &Client, board_id: i32) -> Result<Board, PgError>
         id: query.first().unwrap().get(0),
         name: query.first().unwrap().get(1),
     })
+}
+pub async fn post_board(client: &Client, board: Board) -> Result<u64, PgError> {
+    let query_str = "\
+    INSERT INTO boards (name) values ($1)";
+    client.execute(query_str, &[&board.name]).await
 }
 
 pub async fn get_board_places(client: &Client, board_id: i32) -> Result<BoardPlaces, PgError> {
