@@ -1,6 +1,4 @@
-use crate::utils::runtime::GLOBAL_RT;
-use deadpool_postgres::{Client, Manager, ManagerConfig, Pool};
-use rouille::Response;
+use deadpool_postgres::{Manager, ManagerConfig, Pool};
 use tokio_postgres::NoTls;
 
 pub fn make_pool(conn_str: &str) -> anyhow::Result<Pool> {
