@@ -1,5 +1,6 @@
 pub mod boards;
 pub mod drinks;
 pub mod games;
-pub(crate) mod login;
+pub mod login;
+mod team;
 pub mod utils;
