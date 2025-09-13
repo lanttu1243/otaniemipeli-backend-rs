@@ -1,5 +1,5 @@
 use crate::utils::types::{
-    LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UserTypes,
+    LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UsersTypes,
 };
 use chrono::prelude::*;
 use deadpool_postgres::Client;
@@ -47,7 +47,7 @@ pub async fn post_login_db(
         uid: -404,
         username: "NOT FOUND".to_string(),
         email: "NOT.FOUND@tietokilta.fi".to_string(),
-        user_types: UserTypes::new(),
+        user_types: UsersTypes::new(),
     };
 
     let query = match client.query(query_str, &[&login_info.username]).await {
@@ -148,7 +148,7 @@ pub async fn check_session(session_hash: &str, client: &Client) -> Result<Sessio
     let mut session: SessionInfo = SessionInfo {
         uid: -404,
         session_hash: "".to_string(),
-        user_types: UserTypes::new(),
+        user_types: UsersTypes::new(),
     };
     for row in query {
         match row.try_get::<usize, i32>(0) {
@@ -253,7 +253,7 @@ pub async fn user_create(
         SessionInfo {
             uid: -1,
             session_hash: "".to_string(),
-            user_types: UserTypes::new(),
+            user_types: UsersTypes::new(),
         },
     ))
 }

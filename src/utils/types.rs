@@ -68,7 +68,7 @@ pub struct UserInfo {
     pub uid: i32,
     pub username: String,
     pub email: String,
-    pub user_types: UserTypes,
+    pub user_types: UsersTypes,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UserCreateInfo {
@@ -81,7 +81,7 @@ pub struct UserCreateInfo {
 pub struct SessionInfo {
     pub uid: i32,
     pub session_hash: String,
-    pub user_types: UserTypes,
+    pub user_types: UsersTypes,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UserSessionInfo {
@@ -89,10 +89,10 @@ pub struct UserSessionInfo {
     pub session: SessionInfo,
 }
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct UserTypes {
+pub struct UsersTypes {
     pub user_types: Vec<UserType>,
 }
-impl UserTypes {
+impl UsersTypes {
     pub fn new() -> Self {
         Self {
             user_types: Vec::new(),
@@ -105,7 +105,6 @@ impl UserTypes {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Team {
     pub team_id: i32,
-    pub name: String,
     pub game_id: i32,
     pub team_name: String,
     pub team_hash: String,
@@ -115,7 +114,7 @@ pub struct Teams {
     pub teams: Vec<Team>,
 }
 #[derive(Clone, Serialize, Deserialize)]
-pub struct GameInfo {
+pub struct Game {
     pub id: i32,
     pub name: String,
     pub board: String,
@@ -130,7 +129,7 @@ pub struct PostGame {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Games {
-    pub games: Vec<GameInfo>,
+    pub games: Vec<Game>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Board {

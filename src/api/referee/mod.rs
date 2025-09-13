@@ -1,9 +1,8 @@
 use crate::database::games::{get_games, post_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
-use crate::server::MessageIn;
 use crate::utils::state::AppState;
-use crate::utils::types::{Games, MessageBack, PostGame, SocketAuth, Team, Teams};
+use crate::utils::types::{Games, PostGame, SocketAuth, Team, Teams};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -29,25 +28,6 @@ pub async fn referee_on_connect<A: Adapter>(
         let _ = s.disconnect();
         return; // early return so we don’t continue
     }
-
-    s.on("message", |s: SocketRef<A>, Data::<MessageIn>(data)| { // <-- generic here too
-        println!(
-            "got 'message' from {}:\n{{\n  message_type: {}\n  content: {}\n  value: {}\n  timestamp: {}\n}}",
-            s.id, data.message_type, data.content, data.value, data.timestamp
-        );
-
-        let payload = MessageBack {
-            ok: true,
-            echo: format!(
-                "got 'message' from {}:\n{{\n  message_type: {}\n  content: {}\n  value: {}\n  timestamp: {}\n}}",
-                s.id, data.message_type, data.content, data.value, data.timestamp
-            ),
-        };
-
-        if let Err(e) = s.emit("message-back", &payload) {
-            eprintln!("emit error to {}: {e}", s.id);
-        }
-    });
     s.on(
         "start-game",
         |s: SocketRef<A>, Data(game): Data<PostGame>, State(state): State<AppState>| async move {
@@ -103,6 +83,23 @@ pub async fn referee_on_connect<A: Adapter>(
                 }
             };
             let teams: Teams = match get_teams(&client, team.game_id).await {
+                Ok(teams) => Teams { teams },
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                    return;
+                }
+            };
+            s.emit("reply-teams", &teams).expect("Failed replying team");
+        },
+    );
+    s.on(
+        "get-teams",
+        |s: SocketRef<A>, Data(game_id): Data<i32>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            let teams: Teams = match get_teams(&client, game_id).await {
                 Ok(teams) => Teams { teams },
                 Err(e) => {
                     let _ = s.emit("response-error", &format!("db error: {e}"));

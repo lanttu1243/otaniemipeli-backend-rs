@@ -13,7 +13,7 @@ pub async fn get_games(client: &Client) -> Result<Games, PgError> {
     FROM games
     INNER JOIN boards ON games.board_id = boards.board_id";
 
-    let mut games: Vec<GameInfo> = Vec::new();
+    let mut games: Vec<Game> = Vec::new();
 
     let query = match client.query(query_str, &[]).await {
         Ok(r) => r,
@@ -21,7 +21,7 @@ pub async fn get_games(client: &Client) -> Result<Games, PgError> {
     };
 
     for row in query {
-        let game: GameInfo = GameInfo {
+        let game: Game = Game {
             id: row.get(0),
             name: row.get(1),
             board: row.get(2),
@@ -36,7 +36,7 @@ pub async fn get_game(
     client: &Client,
     game_name: String,
     game_board: i32,
-) -> Result<GameInfo, PgError> {
+) -> Result<Game, PgError> {
     let query_str = "SELECT
         games.game_id AS game_id,
         games.name AS game_name,
@@ -46,7 +46,7 @@ pub async fn get_game(
     FROM games
     INNER JOIN boards ON games.board_id = boards.board_id
     WHERE games.name = $1 AND games.board_id = $2";
-    let mut game: GameInfo = GameInfo {
+    let mut game: Game = Game {
         id: -100,
         name: "unknown".to_string(),
         board: "unknown".to_string(),
@@ -58,7 +58,7 @@ pub async fn get_game(
     match client.query(query_str, &[&game_name, &game_board]).await {
         Ok(query) => {
             for row in query {
-                game = GameInfo {
+                game = Game {
                     id: row.get(0),
                     name: row.get(1),
                     board: row.get(2),
@@ -72,7 +72,7 @@ pub async fn get_game(
     }
 }
 
-pub async fn post_game(client: &Client, game: PostGame) -> Result<GameInfo, PgError> {
+pub async fn post_game(client: &Client, game: PostGame) -> Result<Game, PgError> {
     let query_str = "\
     INSERT INTO games (name, board_id) VALUES ($1, $2)";
 

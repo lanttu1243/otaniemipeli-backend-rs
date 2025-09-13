@@ -1,7 +1,7 @@
 use crate::database::login::*;
 use crate::utils::state::{AppError, AppState};
 use crate::utils::types::{
-    LoginInfo, SessionInfo, UserCreateInfo, UserInfo, UserSessionInfo, UserTypes,
+    LoginInfo, SessionInfo, UserCreateInfo, UserInfo, UserSessionInfo, UsersTypes,
 };
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -202,7 +202,7 @@ pub async fn create_user(
                 session: SessionInfo {
                     uid: -1,
                     session_hash: "".to_string(),
-                    user_types: UserTypes {
+                    user_types: UsersTypes {
                         user_types: Vec::new(),
                     },
                 },

@@ -14,11 +14,10 @@ pub async fn create_team(client: &Client, team: Team) -> Result<Team, PgError> {
     match query {
         Ok(row) => {
             let team = Team {
-                team_id: row.get("team_id"),
-                name: row.get("name"),
-                game_id: row.get("game_id"),
-                team_name: row.get("team_name"),
-                team_hash: row.get("team_hash"),
+                team_id: row.get(0),
+                game_id: row.get(1),
+                team_name: row.get(2),
+                team_hash: row.get(3),
             };
             Ok(team)
         }
@@ -34,11 +33,10 @@ pub async fn get_teams(client: &Client, game_id: i32) -> Result<Vec<Team>, PgErr
             let teams: Vec<Team> = rows
                 .iter()
                 .map(|row| Team {
-                    team_id: row.get("team_id"),
-                    name: row.get("name"),
-                    game_id: row.get("game_id"),
-                    team_name: row.get("team_name"),
-                    team_hash: row.get("team_hash"),
+                    team_id: row.get(0),
+                    game_id: row.get(1),
+                    team_name: row.get(2),
+                    team_hash: row.get(3),
                 })
                 .collect();
             Ok(teams)
