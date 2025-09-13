@@ -2,7 +2,7 @@ use crate::login::utils::{
     create_user, end_all_sessions, end_session, exist_users, start_session, verify_session,
 };
 use crate::utils::state::AppState;
-use axum::routing::{delete, get, post};
+use axum::routing::{delete, post};
 use axum::Router;
 
 pub mod utils;

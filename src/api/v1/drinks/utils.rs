@@ -1,10 +1,7 @@
-use crate::database::drinks::{
-    delete_drink, delete_ingredient, get_drinks, get_drinks_ingredients, get_ingredient,
-    post_drink, post_ingredient,
-};
+use crate::database::drinks::{delete_drink, get_drinks_ingredients, post_drink};
 use crate::utils::remove_ingredients;
 use crate::utils::state::{AppError, AppState};
-use crate::utils::types::{Drink, Drinks, DrinksIngredients, Ingredient, ResultIntJson};
+use crate::utils::types::{Drink, DrinksIngredients, ResultIntJson};
 use axum::extract::{Path, State};
 use axum::Json;
 use deadpool_postgres::Client;

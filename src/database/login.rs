@@ -2,11 +2,11 @@ use crate::utils::types::{
     LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UserTypes,
 };
 use chrono::prelude::*;
+use deadpool_postgres::Client;
 use rand::distr::Alphanumeric;
 use rand::Rng;
 use sha2::{Digest, Sha256};
 use std::env;
-use tokio_postgres::Client;
 
 fn hash_password(pw: String) -> String {
     let salt: String = rand::rng()

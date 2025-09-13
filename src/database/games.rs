@@ -1,5 +1,5 @@
 use crate::utils::types::*;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use deadpool_postgres::Client;
 
 pub async fn get_games(client: &Client) -> Result<Games, PgError> {

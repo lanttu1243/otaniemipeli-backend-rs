@@ -1,5 +1,5 @@
 use crate::utils::state::AppState;
-use axum::routing::{delete, get};
+use axum::routing::get;
 use axum::Router;
 
 pub mod utils;

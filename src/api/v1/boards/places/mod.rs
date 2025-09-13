@@ -1,6 +1,6 @@
 use crate::api::v1::boards::utils::board_place_post;
 use crate::utils::state::AppState;
-use axum::routing::{get, patch, post};
+use axum::routing::{get, patch};
 use axum::Router;
 
 pub mod utils;

@@ -12,7 +12,7 @@ use axum::{middleware, routing::get, Router};
 use socketioxide::SocketIo;
 use tracing_subscriber::FmtSubscriber;
 
-use crate::utils::state::{all_middleware, auth_middleware, AppState};
+use crate::utils::state::{all_middleware, AppState};
 
 #[derive(Debug, serde::Deserialize)]
 pub(crate) struct MessageIn {

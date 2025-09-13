@@ -103,6 +103,18 @@ impl UserTypes {
     }
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct Team {
+    pub team_id: i32,
+    pub name: String,
+    pub game_id: i32,
+    pub team_name: String,
+    pub team_hash: String,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Teams {
+    pub teams: Vec<Team>,
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameInfo {
     pub id: i32,
     pub name: String,

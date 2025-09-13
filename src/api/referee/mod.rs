@@ -1,8 +1,10 @@
 use crate::database::games::{get_games, post_game};
 use crate::database::login::check_session;
+use crate::database::team::{create_team, get_teams};
 use crate::server::MessageIn;
 use crate::utils::state::AppState;
-use crate::utils::types::{Games, MessageBack, PostGame, SocketAuth};
+use crate::utils::types::{Games, MessageBack, PostGame, SocketAuth, Team, Teams};
+use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
 
@@ -64,7 +66,7 @@ pub async fn referee_on_connect<A: Adapter>(
                     } else {
                         let games = get_games(&client)
                             .await
-                            .unwrap_or_else(|e| Games { games: Vec::new() });
+                            .unwrap_or_else(|_| Games { games: Vec::new() });
                         s.emit("reply-games", &games)
                             .expect("Failed replying games");
                     }
@@ -76,17 +78,47 @@ pub async fn referee_on_connect<A: Adapter>(
         },
     );
     s.on("get-games", |s: SocketRef<A>| async move {
-        let client = match state.db.get().await {
-            Ok(c) => c,
-            Err(e) => {
-                let _ = s.emit("response-error", &format!("db pool error: {e}"));
-                return;
-            }
+        let client = match get_db_client(&state, &s).await {
+            Some(c) => c,
+            None => return,
         };
         let games = get_games(&client)
             .await
-            .unwrap_or_else(|e| Games { games: Vec::new() });
+            .unwrap_or_else(|_| Games { games: Vec::new() });
         s.emit("reply-games", &games)
             .expect("Failed replying games");
-    })
+    });
+    s.on(
+        "create-team",
+        |s: SocketRef<A>, Data(team): Data<Team>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            let team: Team = match create_team(&client, team).await {
+                Ok(team) => team,
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                    return;
+                }
+            };
+            let teams: Teams = match get_teams(&client, team.game_id).await {
+                Ok(teams) => Teams { teams },
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                    return;
+                }
+            };
+            s.emit("reply-teams", &teams).expect("Failed replying team");
+        },
+    );
+}
+async fn get_db_client(state: &AppState, s: &SocketRef<impl Adapter>) -> Option<Client> {
+    match state.db.get().await {
+        Ok(c) => Some(c),
+        Err(e) => {
+            let _ = s.emit("response-error", &format!("db pool error: {e}"));
+            None
+        }
+    }
 }
