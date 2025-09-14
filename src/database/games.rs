@@ -25,8 +25,9 @@ pub async fn get_games(client: &Client) -> Result<Games, PgError> {
             id: row.get(0),
             name: row.get(1),
             board: row.get(2),
-            finished: row.get(3),
-            start_time: row.get(4),
+            started: row.get(3),
+            finished: row.get(4),
+            start_time: row.get(5),
         };
         games.push(game);
     }
@@ -50,6 +51,7 @@ pub async fn get_game(
         id: -100,
         name: "unknown".to_string(),
         board: "unknown".to_string(),
+        started: false,
         finished: false,
         start_time: DateTime::parse_from_rfc3339("1986-02-13T14:00:00Z")
             .unwrap()
@@ -62,8 +64,9 @@ pub async fn get_game(
                     id: row.get(0),
                     name: row.get(1),
                     board: row.get(2),
-                    finished: row.get(3),
-                    start_time: row.get(4),
+                    started: row.get(3),
+                    finished: row.get(4),
+                    start_time: row.get(5),
                 };
             }
             Ok(game)
@@ -78,6 +81,29 @@ pub async fn post_game(client: &Client, game: PostGame) -> Result<Game, PgError>
 
     match client.execute(query_str, &[&game.name, &game.board]).await {
         Ok(_) => get_game(client, game.name, game.board).await,
+        Err(e) => Err(e),
+    }
+}
+pub async fn start_game(client: &Client, game_id: i32) -> Result<Game, PgError> {
+    let query_str = "\
+    UPDATE games SET \
+     started = true, \
+     start_time = NOW() \
+    WHERE game_id = $1 \
+    RETURNING *";
+
+    match client.query_one(query_str, &[&game_id]).await {
+        Ok(row) => {
+            let game = Game {
+                id: row.get(0),
+                name: row.get(1),
+                board: row.get(2),
+                started: row.get(3),
+                finished: row.get(4),
+                start_time: row.get(5),
+            };
+            Ok(game)
+        }
         Err(e) => Err(e),
     }
 }

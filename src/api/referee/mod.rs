@@ -1,4 +1,4 @@
-use crate::database::games::{get_games, post_game};
+use crate::database::games::{get_games, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
@@ -29,7 +29,7 @@ pub async fn referee_on_connect<A: Adapter>(
         return; // early return so we don’t continue
     }
     s.on(
-        "start-game",
+        "create-game",
         |s: SocketRef<A>, Data(game): Data<PostGame>, State(state): State<AppState>| async move {
             let client = match state.db.get().await {
                 Ok(c) => c,
@@ -53,6 +53,24 @@ pub async fn referee_on_connect<A: Adapter>(
                 }
                 Err(e) => {
                     let _ = s.emit("response-error", &format!("db error: {e}"));
+                }
+            }
+        },
+    );
+    s.on(
+        "start-game",
+        |s: SocketRef<A>, Data(game_id): Data<i32>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            match start_game(&client, game_id).await {
+                Ok(game) => {
+                    s.emit("reply-game", &game).expect("Failed replying game");
+                }
+                Err(e) => {
+                    s.emit("response-error", &format!("db error: {e}"))
+                        .expect("Failed sending error");
                 }
             }
         },
