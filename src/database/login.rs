@@ -1,12 +1,10 @@
 use crate::utils::types::{
     LoginInfo, PgError, SessionInfo, UserCreateInfo, UserInfo, UserType, UsersTypes,
 };
-use chrono::prelude::*;
 use deadpool_postgres::Client;
 use rand::distr::Alphanumeric;
 use rand::Rng;
 use sha2::{Digest, Sha256};
-use std::env;
 
 fn hash_password(pw: String) -> String {
     let salt: String = rand::rng()
@@ -96,15 +94,7 @@ pub async fn create_session(uid: i32, client: &Client) -> Result<String, PgError
     WHERE u.uid = $1 \
     RETURNING uid";
 
-    let salt = env::var("SALT").unwrap_or_else(|_| {
-        eprintln!("SALT environment variable not set");
-        "".to_string()
-    });
-
-    let session_prehash = format!("{}{}{}", Utc::now(), salt, uid);
-    let mut hasher = Sha256::new();
-    hasher.update(&session_prehash);
-    let session_hash = format!("{:X}", hasher.finalize());
+    let session_hash = hex::encode_upper(rand::random::<[u8; 32]>());
 
     match client.execute(query_str, &[&uid, &session_hash]).await {
         Ok(_) => Ok(session_hash),
@@ -118,7 +108,7 @@ pub async fn update_session(session_hash: &str, client: &Client) -> Result<(u64,
             expires     = GREATEST(expires, now() + interval '1 hour')
         WHERE session_hash = $1";
 
-    let delete_query = "DELETE FROM sessions WHERE expires < now()";
+    let delete_query = "DELETE FROM sessions WHERE expires <= now()";
 
     let update = client.execute(update_query, &[&session_hash]).await?;
     let delete = client.execute(delete_query, &[]).await?;
