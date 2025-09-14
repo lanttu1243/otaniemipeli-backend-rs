@@ -2,7 +2,7 @@ use crate::database::games::{get_games, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
-use crate::utils::types::{Games, PostGame, SocketAuth, Team, Teams};
+use crate::utils::types::{Games, PostGame, SocketAuth, Team, Teams, UserType};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -23,11 +23,19 @@ pub async fn referee_on_connect<A: Adapter>(
         }
     };
 
-    if let Err(e) = check_session(token.as_str(), &client).await {
-        eprintln!("auth failed for socket {}: {e}", s.id);
-        let _ = s.disconnect();
-        return; // early return so we don’t continue
-    }
+    match check_session(token.as_str(), &client).await {
+        Ok(session) => {
+            s.emit("authorized", &session)
+                .expect("Failed sending authorized");
+        }
+        Err(e) => {
+            eprintln!("auth failed for socket {}: {e}", s.id);
+            s.emit("unauthorized", "invalid token")
+                .expect("Failed sending unauthorized");
+            let _ = s.disconnect();
+            return;
+        }
+    };
     s.on(
         "verify-login",
         |s: SocketRef<A>, Data(auth): Data<SocketAuth>, State(state): State<AppState>| async move {
@@ -35,15 +43,35 @@ pub async fn referee_on_connect<A: Adapter>(
             let client = match state.db.get().await {
                 Ok(c) => c,
                 Err(e) => {
-                    let _ = s.emit("response-error", &format!("db pool error: {e}"));
+                    s.emit("unauthorized", "db error")
+                        .expect("Failed sending unauthorized");
                     let _ = s.disconnect();
                     return;
                 }
             };
-            if let Err(e) = check_session(token.as_str(), &client).await {
-                eprintln!("auth failed for socket {}: {e}", s.id);
-                let _ = s.disconnect();
-                return;
+            match check_session(token.as_str(), &client).await {
+                Ok(session) => {
+                    if session
+                        .user_types
+                        .user_types
+                        .iter()
+                        .all(|t| *t != UserType::referee)
+                    {
+                        s.emit("unauthorized", "Wrong user type")
+                            .expect("Failed sending unauthorized");
+                        let _ = s.disconnect();
+                        return;
+                    }
+                    s.emit("authorized", &session)
+                        .expect("Failed sending authorized");
+                }
+                Err(e) => {
+                    eprintln!("auth failed for socket {}: {e}", s.id);
+                    s.emit("unauthorized", "invalid token")
+                        .expect("Failed sending unauthorized");
+                    let _ = s.disconnect();
+                    return;
+                }
             };
         },
     );

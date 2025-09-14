@@ -29,7 +29,6 @@ pub struct MessageBack {
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
 #[postgres(name = "usertype")]
-#[derive(PartialEq, Eq)]
 pub enum UserType {
     #[postgres(name = "admin")]
     admin,
@@ -51,6 +50,14 @@ impl UserType {
             UserType::secretary => "secretary",
             UserType::team => "team",
         }
+    }
+}
+impl PartialEq<UserType> for UserType {
+    fn eq(&self, other: &UserType) -> bool {
+        self.as_str() == other.as_str()
+    }
+    fn ne(&self, other: &UserType) -> bool {
+        self.as_str() != other.as_str()
     }
 }
 impl core::fmt::Display for UserType {
