@@ -1,6 +1,7 @@
 use crate::utils::types::*;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Client;
+use tokio_postgres::Row;
 
 pub async fn get_games(client: &Client) -> Result<Games, PgError> {
     let query_str = "
@@ -62,14 +63,7 @@ pub async fn get_game(
     match client.query(query_str, &[&game_name, &game_board]).await {
         Ok(query) => {
             for row in query {
-                game = Game {
-                    id: row.get(0),
-                    name: row.get(1),
-                    board: row.get(2),
-                    started: row.get(3),
-                    finished: row.get(4),
-                    start_time: row.get(5),
-                };
+                game = build_game_from_row(&row).await;
             }
             Ok(game)
         }
@@ -86,26 +80,67 @@ pub async fn post_game(client: &Client, game: PostGame) -> Result<Game, PgError>
         Err(e) => Err(e),
     }
 }
-pub async fn start_game(client: &Client, game_id: i32) -> Result<Game, PgError> {
+pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Result<(), PgError> {
+    let query_str = "\
+    WITH ins_turns AS (
+      INSERT INTO turns (team_id, game_id, dice1, dice2)
+      SELECT team_id, $1::int, -1, -1
+      FROM teams
+      WHERE game_id = $1
+      RETURNING turn_id
+    ),
+    drinks(drink_id) AS (
+      SELECT UNNEST($2::int[])
+    ),
+    ins_drinks AS (
+      INSERT INTO turn_drinks (drink_id, turn_id, n)
+      SELECT d.drink_id, it.turn_id, 1
+      FROM ins_turns it
+      CROSS JOIN drinks d
+      RETURNING drink_id, turn_id, n
+    )
+    SELECT * FROM ins_drinks
+    ";
+
+    let (drink_ids, counts): (Vec<i32>, Vec<i32>) = first_turn
+        .drinks
+        .iter()
+        .map(|td| (td.drink.id, td.n))
+        .unzip();
+
+    match client
+        .execute(query_str, &[&first_turn.game_id, &drink_ids, &counts])
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+pub async fn start_game(client: &Client, first_turn: FirstTurnPost) -> Result<Game, PgError> {
     let query_str = "\
     UPDATE games SET \
      started = true, \
      start_time = NOW() \
     WHERE game_id = $1 \
     RETURNING *";
+    make_first_turns(client, &first_turn).await?;
 
-    match client.query_one(query_str, &[&game_id]).await {
+    match client.query_one(query_str, &[&first_turn.game_id]).await {
         Ok(row) => {
-            let game = Game {
-                id: row.get(0),
-                name: row.get(1),
-                board: row.get(2),
-                started: row.get(3),
-                finished: row.get(4),
-                start_time: row.get(5),
-            };
+            let game = build_game_from_row(&row).await;
             Ok(game)
         }
         Err(e) => Err(e),
+    }
+}
+
+async fn build_game_from_row(row: &Row) -> Game {
+    Game {
+        id: row.get(0),
+        name: row.get(1),
+        board: row.get(2),
+        started: row.get(3),
+        finished: row.get(4),
+        start_time: row.get(5),
     }
 }

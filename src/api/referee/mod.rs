@@ -1,8 +1,9 @@
+use crate::database::drinks::get_drinks_ingredients;
 use crate::database::games::{get_games, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
-use crate::utils::types::{Games, PostGame, SocketAuth, Team, Teams, UserType};
+use crate::utils::types::{FirstTurnPost, Games, PostGame, SocketAuth, Team, Teams, UserType};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -106,12 +107,12 @@ pub async fn referee_on_connect<A: Adapter>(
     );
     s.on(
         "start-game",
-        |s: SocketRef<A>, Data(game_id): Data<i32>, State(state): State<AppState>| async move {
+        |s: SocketRef<A>, Data(first_turn): Data<FirstTurnPost>, State(state): State<AppState>| async move {
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
             };
-            match start_game(&client, game_id).await {
+            match start_game(&client, first_turn).await {
                 Ok(game) => {
                     s.emit("reply-game", &game).expect("Failed replying game");
                 }
@@ -172,6 +173,24 @@ pub async fn referee_on_connect<A: Adapter>(
                 }
             };
             s.emit("reply-teams", &teams).expect("Failed replying team");
+        },
+    );
+    s.on(
+        "get-drinks",
+        |s: SocketRef<A>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            match get_drinks_ingredients(&client).await {
+                Ok(drinks) => {
+                    s.emit("reply-drinks", &drinks)
+                        .expect("Failed replying drinks");
+                }
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                }
+            }
         },
     );
 }

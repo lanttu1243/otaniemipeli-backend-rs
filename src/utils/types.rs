@@ -121,6 +121,17 @@ pub struct Teams {
     pub teams: Vec<Team>,
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct TurnDrink {
+    pub drink: Drink,
+    pub turn_id: i32,
+    pub n: i32,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct FirstTurnPost {
+    pub game_id: i32,
+    pub drinks: Vec<TurnDrink>,
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Game {
     pub id: i32,
     pub name: String,
