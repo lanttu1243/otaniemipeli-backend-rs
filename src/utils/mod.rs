@@ -1,5 +1,4 @@
 use crate::utils::types::{DrinkIngredients, DrinksIngredients};
-
 pub mod state;
 pub mod types;
 

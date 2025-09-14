@@ -29,6 +29,25 @@ pub async fn referee_on_connect<A: Adapter>(
         return; // early return so we don’t continue
     }
     s.on(
+        "verify-login",
+        |s: SocketRef<A>, Data(auth): Data<SocketAuth>, State(state): State<AppState>| async move {
+            let token = auth.token.clone();
+            let client = match state.db.get().await {
+                Ok(c) => c,
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db pool error: {e}"));
+                    let _ = s.disconnect();
+                    return;
+                }
+            };
+            if let Err(e) = check_session(token.as_str(), &client).await {
+                eprintln!("auth failed for socket {}: {e}", s.id);
+                let _ = s.disconnect();
+                return;
+            };
+        },
+    );
+    s.on(
         "create-game",
         |s: SocketRef<A>, Data(game): Data<PostGame>, State(state): State<AppState>| async move {
             let client = match state.db.get().await {
