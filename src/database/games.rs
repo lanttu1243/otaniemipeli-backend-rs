@@ -8,6 +8,7 @@ pub async fn get_games(client: &Client) -> Result<Games, PgError> {
         games.game_id AS game_id,
         games.name AS game_name,
         boards.name AS board_name,
+        games.started AS started,
         games.finished AS finished,
         games.start_time AS start_time
     FROM games
@@ -42,6 +43,7 @@ pub async fn get_game(
         games.game_id AS game_id,
         games.name AS game_name,
         boards.name AS board_name,
+        games.started AS started,
         games.finished AS finished,
         games.start_time AS start_time
     FROM games
