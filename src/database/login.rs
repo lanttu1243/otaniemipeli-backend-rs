@@ -110,8 +110,8 @@ pub async fn update_session(session_hash: &str, client: &Client) -> Result<(u64,
 
     let delete_query = "DELETE FROM sessions WHERE expires <= now()";
 
-    let update = client.execute(update_query, &[&session_hash]).await?;
     let delete = client.execute(delete_query, &[]).await?;
+    let update = client.execute(update_query, &[&session_hash]).await?;
 
     Ok((update, delete))
 }
