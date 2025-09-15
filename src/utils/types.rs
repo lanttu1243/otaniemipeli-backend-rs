@@ -21,12 +21,6 @@ pub enum PlaceType {
 pub struct SocketAuth {
     pub token: String,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct MessageBack {
-    pub ok: bool,
-    pub echo: String,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, ToSql, FromSql)]
 #[postgres(name = "usertype")]
 pub enum UserType {
