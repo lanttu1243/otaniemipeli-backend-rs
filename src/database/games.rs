@@ -1,4 +1,3 @@
-use crate::database::drinks::get_drinks;
 use crate::database::team::get_teams;
 use crate::utils::types::*;
 use chrono::{DateTime, Utc};
@@ -156,17 +155,14 @@ async fn build_game_from_row(row: &Row) -> Game {
 pub async fn get_team_data(client: &Client, game_id: i32) -> Result<GameData, PgError> {
     let game = get_game_id(client, game_id).await?;
     let teams = get_teams(client, game_id).await?;
-    let teams = join_all(teams.iter().map(|team| {
-        let team = team.clone();
-        async move {
-            let turns = get_team_turns(&client, team.team_id)
-                .await
-                .unwrap_or_default();
-            GameTeam {
-                team,
-                turns,
-                location: None,
-            }
+    let teams = join_all(teams.into_iter().map(|team| async move {
+        let turns = get_team_turns(client, team.team_id)
+            .await
+            .unwrap_or_default();
+        GameTeam {
+            team,
+            turns,
+            location: None,
         }
     }))
     .await;
@@ -174,7 +170,7 @@ pub async fn get_team_data(client: &Client, game_id: i32) -> Result<GameData, Pg
 }
 pub async fn get_team_turns(client: &Client, team_id: i32) -> Result<Vec<Turn>, PgError> {
     let query_str = "\
-    SELECT * FROM turns WHERE game_id = $1 ORDER BY turn_id ASC";
+    SELECT * FROM turns WHERE team_id = $1 ORDER BY turn_id ASC";
     let query = match client.query(query_str, &[&team_id]).await {
         Ok(r) => r,
         Err(e) => return Err(e),
@@ -199,21 +195,28 @@ pub async fn get_team_turns(client: &Client, team_id: i32) -> Result<Vec<Turn>, 
     Ok(turns)
 }
 pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Drinks, PgError> {
-    let query_str = "\
-    SELECT \
-        td.drink_id \
-    FROM turn_drinks as td\
-     WHERE td.turn_id = $1";
-    let query = match client.query(query_str, &[&turn_id]).await {
-        Ok(r) => r,
-        Err(e) => return Err(e),
-    };
-    let drink_ids: Vec<i32> = query.iter().map(|row| row.get(0)).collect();
-    let drinks: Vec<Drink> = get_drinks(client)
-        .await?
-        .drinks
+    let ids_rows = client
+        .query(
+            "SELECT td.drink_id FROM turn_drinks td WHERE td.turn_id = $1",
+            &[&turn_id],
+        )
+        .await?;
+
+    let drink_ids: Vec<i32> = ids_rows.into_iter().map(|r| r.get(0)).collect();
+    if drink_ids.is_empty() {
+        return Ok(Drinks { drinks: Vec::new() });
+    }
+
+    let rows = client
+        .query("SELECT * FROM drinks WHERE id = ANY($1)", &[&drink_ids])
+        .await?;
+
+    let drinks: Vec<Drink> = rows
         .into_iter()
-        .filter(|drink| drink_ids.contains(&drink.id))
+        .map(|row| Drink {
+            id: row.get(0),
+            name: row.get(1),
+        })
         .collect();
 
     Ok(Drinks { drinks })

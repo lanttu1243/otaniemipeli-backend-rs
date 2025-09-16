@@ -1,9 +1,11 @@
 use crate::database::drinks::get_drinks_ingredients;
-use crate::database::games::{get_games, post_game, start_game};
+use crate::database::games::{get_games, get_team_data, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
-use crate::utils::types::{FirstTurnPost, Games, PostGame, SocketAuth, Team, Teams, UserType};
+use crate::utils::types::{
+    FirstTurnPost, GameData, Games, PostGame, SocketAuth, Team, Teams, UserType,
+};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -186,6 +188,24 @@ pub async fn referee_on_connect<A: Adapter>(
                 Ok(drinks) => {
                     s.emit("reply-drinks", &drinks)
                         .expect("Failed replying drinks");
+                }
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                }
+            }
+        },
+    );
+    s.on(
+        "game-data",
+        |s: SocketRef<A>, Data(game): Data<GameData>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            match get_team_data(&client, game.game.id).await {
+                Ok(game_data) => {
+                    s.emit("reply-game-data", &game_data)
+                        .expect("Failed replying game data");
                 }
                 Err(e) => {
                     let _ = s.emit("response-error", &format!("db error: {e}"));
