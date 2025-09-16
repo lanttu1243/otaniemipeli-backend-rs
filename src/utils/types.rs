@@ -126,6 +126,29 @@ pub struct FirstTurnPost {
     pub drinks: Vec<TurnDrink>,
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct GameData {
+    pub game: Game,
+    pub teams: Vec<GameTeam>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct GameTeam {
+    pub team: Team,
+    pub turns: Vec<Turn>,
+    pub location: Option<BoardPlace>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Turn {
+    pub turn_id: i32,
+    pub start_time: DateTime<Utc>,
+    pub team_id: i32,
+    pub game_id: i32,
+    pub dice1: i32,
+    pub dice2: i32,
+    pub finished: bool,
+    pub end_time: DateTime<Utc>,
+    pub drinks: Drinks,
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Game {
     pub id: i32,
     pub name: String,
