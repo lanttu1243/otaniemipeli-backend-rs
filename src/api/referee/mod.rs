@@ -112,10 +112,6 @@ pub async fn referee_on_connect<A: Adapter>(
                 Some(c) => c,
                 None => return,
             };
-            println!("Starting game {}", first_turn.game_id);
-            for td in &first_turn.drinks {
-                println!("  Drink {} x{}", td.drink.name, td.n);
-            }
             match start_game(&client, first_turn).await {
                 Ok(game) => {
                     s.emit("reply-game", &game).expect("Failed replying game");
