@@ -191,13 +191,13 @@ pub async fn get_team_turns(client: &Client, team_id: i32) -> Result<Vec<Turn>, 
             },
             drinks: get_turn_drinks(client, row.get(0))
                 .await
-                .unwrap_or_else(|_| Drinks { drinks: Vec::new() }),
+                .unwrap_or_else(|_| Vec::new()),
         };
         turns.push(turn);
     }
     Ok(turns)
 }
-pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Drinks, PgError> {
+pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Vec<TurnDrink>, PgError> {
     let ids_rows = client
         .query(
             "SELECT td.drink_id FROM turn_drinks td WHERE td.turn_id = $1",
@@ -207,23 +207,33 @@ pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Drinks, Pg
 
     let drink_ids: Vec<i32> = ids_rows.into_iter().map(|r| r.get(0)).collect();
     if drink_ids.is_empty() {
-        return Ok(Drinks { drinks: Vec::new() });
+        return Ok(Vec::new());
     }
 
     let rows = client
         .query(
-            "SELECT * FROM drinks WHERE drink_id = ANY($1)",
-            &[&drink_ids],
+            "SELECT \
+                d.drink_id,\
+                d.name,\
+                td.n \
+                FROM drinks as d \
+                INNER JOIN turn_drinks as td ON d.drink_id = td.drink_id \
+                WHERE d.drink_id = ANY($1) AND td.turn_id = $2",
+            &[&drink_ids, &turn_id],
         )
         .await?;
 
-    let drinks: Vec<Drink> = rows
+    let drinks: Vec<TurnDrink> = rows
         .into_iter()
-        .map(|row| Drink {
-            id: row.get(0),
-            name: row.get(1),
+        .map(|row| TurnDrink {
+            drink: Drink {
+                id: row.get(0),
+                name: row.get(1),
+            },
+            turn_id,
+            n: row.get(2),
         })
         .collect();
 
-    Ok(Drinks { drinks })
+    Ok(drinks)
 }
