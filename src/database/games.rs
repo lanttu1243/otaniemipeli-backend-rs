@@ -40,20 +40,13 @@ pub async fn get_game(
     game_name: String,
     game_board: i32,
 ) -> Result<Game, PgError> {
-    let query_str = "SELECT
-        games.game_id AS game_id,
-        games.start_time AS start_time
-        games.name AS game_name,
-        boards.name AS board_name,
-        games.started AS started,
-        games.finished AS finished,
-    FROM games
-    INNER JOIN boards ON games.board_id = boards.board_id
+    let query_str = "
+    SELECT * FROM games
     WHERE games.name = $1 AND games.board_id = $2";
     let mut game: Game = Game {
         id: -100,
         name: "unknown".to_string(),
-        board: "unknown".to_string(),
+        board: -404,
         started: false,
         finished: false,
         start_time: DateTime::parse_from_rfc3339("1986-02-13T14:00:00Z")
@@ -145,8 +138,8 @@ async fn build_game_from_row(row: &Row) -> Game {
         id: row.get(0),
         start_time: row.get(1),
         name: row.get(2),
-        board: row.get(3),
-        started: row.get(4),
-        finished: row.get(5),
+        finished: row.get(3),
+        board: row.get(4),
+        started: row.get(5),
     }
 }

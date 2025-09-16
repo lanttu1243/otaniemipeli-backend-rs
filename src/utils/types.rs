@@ -129,7 +129,7 @@ pub struct FirstTurnPost {
 pub struct Game {
     pub id: i32,
     pub name: String,
-    pub board: String,
+    pub board: i32,
     pub started: bool,
     pub finished: bool,
     pub start_time: DateTime<Utc>,
