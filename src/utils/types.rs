@@ -145,7 +145,7 @@ pub struct Turn {
     pub dice1: i32,
     pub dice2: i32,
     pub finished: bool,
-    pub end_time: DateTime<Utc>,
+    pub end_time: Option<DateTime<Utc>>,
     pub drinks: Drinks,
 }
 #[derive(Clone, Serialize, Deserialize)]

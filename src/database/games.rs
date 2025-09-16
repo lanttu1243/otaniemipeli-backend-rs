@@ -87,8 +87,8 @@ pub async fn post_game(client: &Client, game: PostGame) -> Result<Game, PgError>
 pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Result<(), PgError> {
     let query_str = "\
     WITH ins_turns AS (
-      INSERT INTO turns (team_id, game_id, dice1, dice2)
-      SELECT team_id, $1::int, -1, -1
+      INSERT INTO turns (team_id, game_id, dice1, dice2, finished)
+      SELECT team_id, $1::int, -1, -1, false
       FROM teams
       WHERE game_id = $1
       RETURNING turn_id
@@ -185,7 +185,10 @@ pub async fn get_team_turns(client: &Client, team_id: i32) -> Result<Vec<Turn>, 
             dice1: row.get(4),
             dice2: row.get(5),
             finished: row.get(6),
-            end_time: row.get(7),
+            end_time: match row.try_get::<usize, DateTime<Utc>>(7) {
+                Ok(t) => Some(t),
+                Err(_) => None,
+            },
             drinks: get_turn_drinks(client, row.get(0))
                 .await
                 .unwrap_or_else(|_| Drinks { drinks: Vec::new() }),
