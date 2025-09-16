@@ -211,7 +211,10 @@ pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Drinks, Pg
     }
 
     let rows = client
-        .query("SELECT * FROM drinks WHERE id = ANY($1)", &[&drink_ids])
+        .query(
+            "SELECT * FROM drinks WHERE drink_id = ANY($1)",
+            &[&drink_ids],
+        )
         .await?;
 
     let drinks: Vec<Drink> = rows
