@@ -4,12 +4,9 @@ use deadpool_postgres::Client;
 pub async fn create_team(client: &Client, team: Team) -> Result<Team, PgError> {
     let query_str = "\
     INSERT INTO teams (game_id, team_name, team_hash) VALUES ($1, $2, $3) RETURNING *";
-
+    let hash: String = hex::encode_upper(rand::random::<[u8; 16]>());
     let query = client
-        .query_one(
-            query_str,
-            &[&team.game_id, &team.team_name, &team.team_hash],
-        )
+        .query_one(query_str, &[&team.game_id, &team.team_name, &hash])
         .await;
     match query {
         Ok(row) => {
