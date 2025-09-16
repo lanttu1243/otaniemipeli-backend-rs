@@ -90,12 +90,13 @@ pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Re
       WHERE game_id = $1
       RETURNING turn_id
     ),
-    drinks(drink_id) AS (
-      SELECT UNNEST($2::int[])
+    drinks(drink_id, n) AS (
+      -- zip drink ids and counts
+      SELECT * FROM unnest($2::int[], $3::int[])
     ),
     ins_drinks AS (
       INSERT INTO turn_drinks (drink_id, turn_id, n)
-      SELECT d.drink_id, it.turn_id, 1
+      SELECT d.drink_id, it.turn_id, GREATEST(1, d.n)  -- clamp to >= 1
       FROM ins_turns it
       CROSS JOIN drinks d
       RETURNING drink_id, turn_id, n
