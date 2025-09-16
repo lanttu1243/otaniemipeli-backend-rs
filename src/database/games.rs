@@ -53,7 +53,7 @@ pub async fn get_game(
 pub async fn get_game_id(client: &Client, game_id: i32) -> Result<Game, PgError> {
     let query_str = "
     SELECT * FROM games
-    WHERE games.id = $1";
+    WHERE games.game_id = $1";
     let mut game: Game = Game {
         id: -100,
         name: "unknown".to_string(),

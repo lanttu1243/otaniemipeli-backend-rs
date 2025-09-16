@@ -3,9 +3,7 @@ use crate::database::games::{get_games, get_team_data, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
-use crate::utils::types::{
-    FirstTurnPost, Games, PostGame, SocketAuth, Team, Teams, UserType,
-};
+use crate::utils::types::{FirstTurnPost, Games, PostGame, SocketAuth, Team, Teams, UserType};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -202,10 +200,11 @@ pub async fn referee_on_connect<A: Adapter>(
                 Some(c) => c,
                 None => return,
             };
+
             match get_team_data(&client, game_id).await {
                 Ok(game_data) => {
                     s.emit("reply-game-data", &game_data)
-                        .expect("Failed replying game data");
+                        .expect("Failed replying game");
                 }
                 Err(e) => {
                     let _ = s.emit("response-error", &format!("db error: {e}"));
