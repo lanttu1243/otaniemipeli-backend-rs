@@ -42,11 +42,11 @@ pub async fn get_game(
 ) -> Result<Game, PgError> {
     let query_str = "SELECT
         games.game_id AS game_id,
+        games.start_time AS start_time
         games.name AS game_name,
         boards.name AS board_name,
         games.started AS started,
         games.finished AS finished,
-        games.start_time AS start_time
     FROM games
     INNER JOIN boards ON games.board_id = boards.board_id
     WHERE games.name = $1 AND games.board_id = $2";
@@ -143,10 +143,10 @@ pub async fn start_game(client: &Client, first_turn: FirstTurnPost) -> Result<Ga
 async fn build_game_from_row(row: &Row) -> Game {
     Game {
         id: row.get(0),
-        name: row.get(1),
-        board: row.get(2),
-        started: row.get(3),
-        finished: row.get(4),
-        start_time: row.get(5),
+        start_time: row.get(1),
+        name: row.get(2),
+        board: row.get(3),
+        started: row.get(4),
+        finished: row.get(5),
     }
 }
