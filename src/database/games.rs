@@ -81,6 +81,7 @@ pub async fn post_game(client: &Client, game: PostGame) -> Result<Game, PgError>
     }
 }
 pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Result<(), PgError> {
+    println!("Making first turns for game {}", first_turn.game_id);
     let query_str = "\
     WITH ins_turns AS (
       INSERT INTO turns (team_id, game_id, dice1, dice2)
@@ -117,6 +118,7 @@ pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Re
     }
 }
 pub async fn start_game(client: &Client, first_turn: FirstTurnPost) -> Result<Game, PgError> {
+    println!("Starting game {}", first_turn.game_id);
     let query_str = "\
     UPDATE games SET \
      started = true, \
