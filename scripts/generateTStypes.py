@@ -16,6 +16,7 @@ Notes:
 - Vec<T> -> T[]
 - [T; N] -> T[]
 - HashMap<K,V> -> Record<string|number, V> (best-effort)
+- (T1, T2, ...) -> [T1, T2, ...]  ← NEW
 """
 
 import re
@@ -51,50 +52,62 @@ def compact_ws(s: str) -> str:
     return " ".join(s.strip().split())
 
 
-def split_generics(inner: str) -> List[str]:
-    parts, depth, cur = [], 0, []
-    for ch in inner:
-        if ch == '<':
-            depth += 1
+def split_top_level_commas(s: str) -> List[str]:
+    parts, stack, cur = [], [], []
+    closing = {'<': '>', '(': ')', '[': ']'}
+    for ch in s:
+        if ch in closing:  # opening
+            stack.append(closing[ch])
             cur.append(ch)
-        elif ch == '>':
-            depth -= 1
+        elif stack and ch == stack[-1]:  # matching closing
+            stack.pop()
             cur.append(ch)
-        elif ch == ',' and depth == 0:
+        elif ch == ',' and not stack:  # split only at top-level
             parts.append("".join(cur).strip())
             cur = []
         else:
             cur.append(ch)
     if cur:
         parts.append("".join(cur).strip())
-    return parts
+    return [p for p in parts if p]
 
 
 def map_rust_type_to_ts(ty: str) -> str:
     t = compact_ws(ty)
-    if t.startswith('(') and t.endswith(')'):
-        t = t[1:-1].strip()
+
+    # TUPLE: (T1, T2, ...)
+    m = re.match(r"^\((.*)\)$", t)
+    if m is not None:
+        inner = m.group(1).strip()
+        if inner == "":
+            return "[]"
+        parts = split_top_level_commas(inner)  # supports nested tuples/generics
+        # handle single-element tuple `(T,)`
+        if len(parts) == 1 and inner.endswith(","):
+            pass  # keep as single-element tuple
+        ts_parts = [map_rust_type_to_ts(p) for p in parts]
+        return f"[{', '.join(ts_parts)}]"
 
     # chrono DateTime
     if re.search(r"\b(?:chrono::)?DateTime\s*<\s*[^>]+>", t):
         return "string"
 
     # Option<T>
-    m = re.match(r"Option\s*<\s*(.+)\s*>$", t)
+    m = re.match(r"^Option\s*<\s*(.+)\s*>$", t)
     if m:
         inner = map_rust_type_to_ts(m.group(1))
         return f"{inner} | null"
 
     # Vec<T>
-    m = re.match(r"Vec\s*<\s*(.+)\s*>$", t)
+    m = re.match(r"^Vec\s*<\s*(.+)\s*>$", t)
     if m:
         inner = map_rust_type_to_ts(m.group(1))
         return f"{inner}[]"
 
     # HashMap<K,V>
-    m = re.match(r"(?:std::collections::)?HashMap\s*<\s*(.+)\s*>$", t)
+    m = re.match(r"^(?:std::collections::)?HashMap\s*<\s*(.+)\s*>$", t)
     if m:
-        kv = split_generics(m.group(1))
+        kv = split_top_level_commas(m.group(1))
         if len(kv) == 2:
             kt = map_rust_type_to_ts(kv[0])
             vt = map_rust_type_to_ts(kv[1])
@@ -102,29 +115,20 @@ def map_rust_type_to_ts(ty: str) -> str:
             return f"Record<{key_ts}, {vt}>"
 
     # Arrays [T; N]
-    m = re.match(r"\[\s*(.+?)\s*;\s*\d+\s*\]$", t)
+    m = re.match(r"^\[\s*(.+?)\s*;\s*\d+\s*\]$", t)
     if m:
         inner = map_rust_type_to_ts(m.group(1))
         return f"{inner}[]"
 
-    # Tuple
-    if t.startswith("(") and t.endswith(")"):
-        inner = t[1:-1].strip()
-        if inner:
-            parts = [p.strip() for p in split_generics(inner)] if ("<" in inner) else [p.strip() for p in
-                                                                                       inner.split(",")]
-            ts_parts = [map_rust_type_to_ts(p) for p in parts if p]
-            return f"[{', '.join(ts_parts)}]"
-        return "[]"
-
+    # Primitives
     if t in PRIMS:
         return PRIMS[t]
 
-    # strip module path for custom types
+    # Strip module path for custom types
     if "::" in t:
         t = t.split("::")[-1]
 
-    # generic wrappers we don't map -> take inner or unknown
+    # Generic wrappers we don't map -> take inner for some, else unknown
     if "<" in t and ">" in t:
         head = t.split("<", 1)[0].strip()
         if head in ("Box", "Arc", "Rc"):
@@ -167,14 +171,27 @@ def parse_enum_body(body: str) -> List[str]:
 
 
 def parse_struct_fields(body: str) -> List[Tuple[str, str]]:
+    # remove attribute lines, keep the rest intact
+    cleaned_lines = [ln for ln in body.splitlines() if not ln.strip().startswith("#[")]
+    s = "\n".join(cleaned_lines).strip()
+
+    # split by top-level commas so tuples/generics are safe
+    chunks = split_top_level_commas(s)
+
     fields: List[Tuple[str, str]] = []
-    for raw in body.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#["):
+    for part in chunks:
+        part = part.strip()
+        if not part:
             continue
-        m = RE_FIELD.search(line)
+        # strip optional trailing commas (in case last item had one)
+        if part.endswith(","):
+            part = part[:-1].rstrip()
+
+        m = re.match(r"^pub\s+([A-Za-z_]\w*)\s*:\s*(.+)$", part)
         if m:
-            fields.append((m.group(1), m.group(2).strip()))
+            name = m.group(1)
+            ty = m.group(2).strip()
+            fields.append((name, ty))
     return fields
 
 
@@ -183,7 +200,7 @@ def rust_to_ts_global(src: str) -> str:
     enums = list(RE_ENUM.finditer(clean))
     structs = list(RE_STRUCT.finditer(clean))
 
-    # Order by appearance: first enums then structs (still stable by start index)
+    # Order by appearance
     enums_sorted = sorted(enums, key=lambda m: m.start())
     structs_sorted = sorted(structs, key=lambda m: m.start())
 
@@ -197,7 +214,7 @@ def rust_to_ts_global(src: str) -> str:
         union = " | ".join(f'"{v}"' for v in values)
         out.append(f"  type {name} = {union};\n")
 
-    # Helper types requested by format
+    # Helper types
     out.append("  type WithNameAndId = { id: string | number; name: string };\n")
     out.append("  interface HeaderItem {")
     out.append("    text: string;")
@@ -215,7 +232,6 @@ def rust_to_ts_global(src: str) -> str:
         out.append("  }\n")
 
     out.append("}")
-    # If you place this in a .ts module and want global augmentation, uncomment:
     out.append("\nexport {};")
     return "\n".join(out) + "\n"
 

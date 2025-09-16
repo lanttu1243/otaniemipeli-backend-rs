@@ -149,6 +149,11 @@ pub struct Turn {
     pub drinks: Vec<TurnDrink>,
 }
 #[derive(Clone, Serialize, Deserialize)]
+pub struct PlaceThrow {
+    pub place: BoardPlace,
+    pub throw: (i8, i8),
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Game {
     pub id: i32,
     pub name: String,

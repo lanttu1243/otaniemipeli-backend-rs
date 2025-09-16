@@ -1,9 +1,12 @@
+use crate::database::boards::get_place_after_throw;
 use crate::database::drinks::get_drinks_ingredients;
 use crate::database::games::{get_games, get_team_data, post_game, start_game};
 use crate::database::login::check_session;
 use crate::database::team::{create_team, get_teams};
 use crate::utils::state::AppState;
-use crate::utils::types::{FirstTurnPost, Games, PostGame, SocketAuth, Team, Teams, UserType};
+use crate::utils::types::{
+    FirstTurnPost, Games, PlaceThrow, PostGame, SocketAuth, Team, Teams, UserType,
+};
 use deadpool_postgres::Client;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::{Data, SocketRef, State};
@@ -212,6 +215,30 @@ pub async fn referee_on_connect<A: Adapter>(
             }
         },
     );
+
+    s.on(
+        "next-place-after-throw",
+        |s: SocketRef<A>, Data(place): Data<PlaceThrow>, State(state): State<AppState>| async move {
+            let client = match get_db_client(&state, &s).await {
+                Some(c) => c,
+                None => return,
+            };
+            let throw = if place.throw.0 > place.throw.1 {
+                place.throw.1
+            } else {
+                place.throw.0
+            };
+            match get_place_after_throw(&client, place.place, throw).await {
+                Ok(next_place) => {
+                    s.emit("reply-next-place", &next_place)
+                        .expect("Failed replying next place");
+                }
+                Err(e) => {
+                    let _ = s.emit("response-error", &format!("db error: {e}"));
+                }
+            }
+        },
+    )
 }
 async fn get_db_client(state: &AppState, s: &SocketRef<impl Adapter>) -> Option<Client> {
     match state.db.get().await {

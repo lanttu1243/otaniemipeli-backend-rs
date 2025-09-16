@@ -88,7 +88,7 @@ pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Re
     let query_str = "\
     WITH ins_turns AS (
       INSERT INTO turns (team_id, game_id, dice1, dice2, finished)
-      SELECT team_id, $1::int, -1, -1, false
+      SELECT team_id, $1::int, 0, 0, false
       FROM teams
       WHERE game_id = $1
       RETURNING turn_id

@@ -1,5 +1,7 @@
+use crate::utils::state::AppError;
 use crate::utils::types::*;
 use deadpool_postgres::Client;
+
 pub async fn get_boards(client: &Client) -> Result<Boards, PgError> {
     let query_str = "\
     SELECT board_id, name FROM boards;";
@@ -278,4 +280,92 @@ pub async fn update_coordinates(
             &[&place.x, &place.y, &board_id, &place.place_number],
         )
         .await
+}
+
+pub async fn get_board_connections(
+    client: &Client,
+    board_id: i32,
+) -> Result<Vec<Connection>, PgError> {
+    let mut connections: Vec<Connection> = Vec::new();
+    let query_str = "\
+    SELECT \
+        board_id, \
+        origin, \
+        target, \
+        on_land, \
+        backwards, \
+        dashed \
+    FROM place_connections \
+    WHERE board_id = $1 \
+    ORDER BY origin";
+
+    let query = match client.query(query_str, &[&board_id]).await {
+        Ok(r) => r,
+        Err(e) => return Err(e),
+    };
+    for row in query {
+        match row.try_get::<usize, i32>(0) {
+            Ok(_) => connections.push(Connection {
+                board_id: row.get(0),
+                origin: row.get(1),
+                target: row.get(2),
+                on_land: row.get(3),
+                backwards: row.get(4),
+                dashed: row.get(5),
+            }),
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(connections)
+}
+fn get_connection_after_throw(connections: &Vec<Connection>, origin: i32, throw: i8) -> i32 {
+    let new_origin: Vec<&Connection> = connections
+        .iter()
+        .filter(|o| o.origin == origin && !o.on_land)
+        .collect();
+    if new_origin.len() == 0 || throw < 0 {
+        -404
+    } else if throw == 0 {
+        origin
+    } else if new_origin.len() == 1 {
+        get_connection_after_throw(connections, new_origin[0].target, throw - 1)
+    } else if new_origin.len() > 1 {
+        get_connection_after_throw(
+            connections,
+            match new_origin.iter().find(|o| o.origin == origin && !o.on_land) {
+                Some(c) => c,
+                None => return -404,
+            }
+            .target,
+            throw - 1,
+        )
+    } else {
+        -404
+    }
+}
+pub async fn get_place_after_throw(
+    client: &Client,
+    place_number: BoardPlace,
+    dice_throw: i8,
+) -> Result<BoardPlace, AppError> {
+    // Get the place after a die throw from a given place number through the place connections
+    let connections = match get_board_connections(&client, place_number.board_id.clone()).await {
+        Ok(c) => c,
+        Err(_) => return Err(AppError::NotFound("No connections found".to_string())),
+    };
+    let target_place_number =
+        get_connection_after_throw(&connections, place_number.place_number, dice_throw);
+    if target_place_number == -404 {
+        return Err(AppError::NotFound("No valid place found".to_string()));
+    }
+    match get_board_places(client, place_number.board_id)
+        .await
+        .unwrap()
+        .places
+        .iter()
+        .find(|p| p.place_number == target_place_number)
+    {
+        Some(p) => Ok(p.clone()),
+        None => Err(AppError::NotFound("No valid place found".to_string())),
+    }
 }
