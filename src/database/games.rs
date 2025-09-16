@@ -4,16 +4,7 @@ use deadpool_postgres::Client;
 use tokio_postgres::Row;
 
 pub async fn get_games(client: &Client) -> Result<Games, PgError> {
-    let query_str = "
-    SELECT 
-        games.game_id AS game_id,
-        games.name AS game_name,
-        boards.name AS board_name,
-        games.started AS started,
-        games.finished AS finished,
-        games.start_time AS start_time
-    FROM games
-    INNER JOIN boards ON games.board_id = boards.board_id";
+    let query_str = "SELECT * FROM games";
 
     let mut games: Vec<Game> = Vec::new();
 
