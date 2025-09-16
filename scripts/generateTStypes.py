@@ -216,7 +216,7 @@ def rust_to_ts_global(src: str) -> str:
 
     out.append("}")
     # If you place this in a .ts module and want global augmentation, uncomment:
-    # out.append("\nexport {};")
+    out.append("\nexport {};")
     return "\n".join(out) + "\n"
 
 
@@ -227,9 +227,6 @@ def main():
     ts = rust_to_ts_global(src)
     with open("global-rust-types.d.ts", "w+", encoding="utf-8") as f:
         f.write(ts)
-    with open("global-rust-types.d.ts", "a", encoding="utf-8") as f:
-        f.write("// This file is auto-generated from Rust types. Do not edit.\n"
-                "export {};")
 
 
 if __name__ == "__main__":
