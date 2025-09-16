@@ -14,14 +14,7 @@ pub async fn get_games(client: &Client) -> Result<Games, PgError> {
     };
 
     for row in query {
-        let game: Game = Game {
-            id: row.get(0),
-            name: row.get(1),
-            board: row.get(2),
-            started: row.get(3),
-            finished: row.get(4),
-            start_time: row.get(5),
-        };
+        let game: Game = build_game_from_row(&row).await;
         games.push(game);
     }
     Ok(Games { games })
