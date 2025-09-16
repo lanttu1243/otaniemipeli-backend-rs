@@ -111,7 +111,10 @@ pub async fn make_first_turns(client: &Client, first_turn: &FirstTurnPost) -> Re
         .unzip();
 
     match client
-        .execute(query_str, &[&first_turn.game_id, &drink_ids, &counts])
+        .execute(
+            query_str,
+            &[&first_turn.game_id, &drink_ids, &counts], // len must match!
+        )
         .await
     {
         Ok(_) => Ok(()),
