@@ -20,7 +20,7 @@ pub async fn check_auth<A: Adapter>(
     match check_session(token, &client).await {
         Ok(session) => {
             println!("session: {:?}", session);
-            if session
+            return if session
                 .user_types
                 .user_types
                 .iter()
@@ -30,13 +30,13 @@ pub async fn check_auth<A: Adapter>(
                 eprintln!("user types: {:?}", session.user_types.user_types);
                 s.emit("unauthorized", "invalid user type")
                     .expect("Failed sending unauthorized");
-                return false;
+                false
             } else {
                 println!("user_types OK");
                 s.emit("authorized", &session)
                     .expect("Failed sending authorized");
                 true
-            }
+            };
         }
         Err(e) => {
             eprintln!("auth failed for socket {}: {e}", s.id);
