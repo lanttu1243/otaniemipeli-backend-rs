@@ -237,3 +237,35 @@ pub async fn get_turn_drinks(client: &Client, turn_id: i32) -> Result<Vec<TurnDr
 
     Ok(drinks)
 }
+pub async fn end_turn(client: &Client, turn_id: i32) -> Result<Turn, PgError> {
+    let query_str = "\
+    UPDATE turns SET \
+     finished = true, \
+     end_time = NOW() \
+    WHERE turn_id = $1 \
+    RETURNING *";
+
+    match client.query_one(query_str, &[&turn_id]).await {
+        Ok(row) => {
+            let turn = build_turn(&row).await;
+            Ok(turn)
+        }
+        Err(e) => Err(e),
+    }
+}
+pub async fn build_turn(row: &Row) -> Turn {
+    Turn {
+        turn_id: row.get(0),
+        start_time: row.get(1),
+        team_id: row.get(2),
+        game_id: row.get(3),
+        dice1: row.get(4),
+        dice2: row.get(5),
+        finished: row.get(6),
+        end_time: match row.try_get::<usize, DateTime<Utc>>(7) {
+            Ok(t) => Some(t),
+            Err(_) => None,
+        },
+        drinks: Vec::new(),
+    }
+}

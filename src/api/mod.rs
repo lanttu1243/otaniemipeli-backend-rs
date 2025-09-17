@@ -1,4 +1,5 @@
 pub mod referee;
+pub mod secretary;
 pub mod v1;
 
 use crate::utils::state::{auth_middleware, AppState};

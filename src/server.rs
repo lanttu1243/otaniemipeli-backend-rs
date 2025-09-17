@@ -1,5 +1,5 @@
-use crate::api::referee as referee_server;
 use crate::api::router as api_router;
+use crate::api::{referee as referee_server, secretary as secretary_server};
 use crate::database::utils::make_pool;
 use crate::login::router as login_router;
 use http::HeaderValue;
@@ -65,8 +65,12 @@ pub async fn start() -> anyhow::Result<()> {
 
     let state = AppState::new(pool);
 
-    let (layer, io) = SocketIo::builder().with_state(state.clone()).build_layer();
-    io.ns("/referee", referee_server::referee_on_connect);
+    let (layer_referee, io_referee) = SocketIo::builder().with_state(state.clone()).build_layer();
+    io_referee.ns("/referee", referee_server::referee_on_connect);
+
+    let (layer_secretary, io_secretary) =
+        SocketIo::builder().with_state(state.clone()).build_layer();
+    io_secretary.ns("/secretary", secretary_server::secretary_on_connect);
 
     let app = Router::new()
         .route(
@@ -77,7 +81,8 @@ pub async fn start() -> anyhow::Result<()> {
         .nest("/api", api_router(state.clone()))
         .layer(middleware::from_fn(all_middleware))
         .with_state(state)
-        .layer(layer)
+        .layer(layer_referee)
+        .layer(layer_secretary)
         .layer(cors);
 
     let listener = match TcpListener::bind(&bind).await {
