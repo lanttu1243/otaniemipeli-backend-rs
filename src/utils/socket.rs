@@ -44,6 +44,5 @@ pub async fn check_auth<A: Adapter>(
                 .expect("Failed sending unauthorized");
             false
         }
-    };
-    false
+    }
 }
