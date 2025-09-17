@@ -58,7 +58,7 @@ pub async fn secretary_on_connect<A: Adapter>(
         },
     );
     s.on("get-games", |s: SocketRef<A>| async move {
-        let client = match crate::api::referee::get_db_client(&state, &s).await {
+        let client = match get_db_client(&state, &s).await {
             Some(c) => c,
             None => return,
         };
