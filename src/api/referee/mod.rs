@@ -18,8 +18,11 @@ pub async fn referee_on_connect<A: Adapter>(
 ) {
     let token = auth.token.clone();
     match check_auth(&token, &s, &state, UserType::referee).await {
-        true => {}
+        true => {
+            tracing::info!("Referee: Connection authorized");
+        }
         false => {
+            tracing::info!("Referee: Connection unauthorized, disconnecting");
             let _ = s.disconnect();
             return;
         }
@@ -27,6 +30,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "verify-login",
         |s: SocketRef<A>, Data(auth): Data<SocketAuth>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: verify-login called");
             let token = auth.token.clone();
             match check_auth(&token, &s, &state, UserType::referee).await {
                 true => {}
@@ -40,6 +44,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "create-game",
         |s: SocketRef<A>, Data(game): Data<PostGame>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: create-game called");
             let client = match state.db.get().await {
                 Ok(c) => c,
                 Err(e) => {
@@ -69,6 +74,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "start-game",
         |s: SocketRef<A>, Data(first_turn): Data<FirstTurnPost>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: start-game called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
@@ -85,6 +91,7 @@ pub async fn referee_on_connect<A: Adapter>(
         },
     );
     s.on("get-games", |s: SocketRef<A>| async move {
+        tracing::info!("Referee: get-games called");
         let client = match get_db_client(&state, &s).await {
             Some(c) => c,
             None => return,
@@ -98,6 +105,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "create-team",
         |s: SocketRef<A>, Data(team): Data<Team>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: create-team called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
@@ -122,6 +130,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "get-teams",
         |s: SocketRef<A>, Data(game_id): Data<i32>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: get-teams called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
@@ -139,6 +148,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "get-drinks",
         |s: SocketRef<A>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: get-drinks called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
@@ -157,6 +167,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "game-data",
         |s: SocketRef<A>, Data(game_id): Data<i32>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: game-data called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
@@ -177,6 +188,7 @@ pub async fn referee_on_connect<A: Adapter>(
     s.on(
         "next-place-after-throw",
         |s: SocketRef<A>, Data(place): Data<PlaceThrow>, State(state): State<AppState>| async move {
+            tracing::info!("Referee: next-place-after-throw called");
             let client = match get_db_client(&state, &s).await {
                 Some(c) => c,
                 None => return,
