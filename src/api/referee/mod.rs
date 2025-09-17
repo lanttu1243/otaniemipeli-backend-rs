@@ -199,7 +199,7 @@ pub async fn referee_on_connect<A: Adapter>(
         },
     )
 }
-async fn get_db_client(state: &AppState, s: &SocketRef<impl Adapter>) -> Option<Client> {
+pub(crate) async fn get_db_client(state: &AppState, s: &SocketRef<impl Adapter>) -> Option<Client> {
     match state.db.get().await {
         Ok(c) => Some(c),
         Err(e) => {
