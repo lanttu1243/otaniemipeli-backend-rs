@@ -19,6 +19,7 @@ pub async fn check_auth<A: Adapter>(
 
     match check_session(token, &client).await {
         Ok(session) => {
+            println!("session: {:?}", session);
             if session
                 .user_types
                 .user_types
@@ -31,10 +32,11 @@ pub async fn check_auth<A: Adapter>(
                     .expect("Failed sending unauthorized");
                 return false;
             } else {
+                println!("user_types OK");
                 s.emit("authorized", &session)
                     .expect("Failed sending authorized");
+                true
             }
-            true
         }
         Err(e) => {
             eprintln!("auth failed for socket {}: {e}", s.id);
