@@ -17,7 +17,6 @@ pub async fn referee_on_connect<A: Adapter>(
     State(state): State<AppState>,
 ) {
     let token = auth.token.clone();
-    let token = auth.token.clone();
     match check_auth(&token, &s, &state, UserType::referee).await {
         true => {}
         false => {

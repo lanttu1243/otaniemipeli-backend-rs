@@ -26,6 +26,7 @@ pub async fn check_auth<A: Adapter>(
                 .all(|t| t != &user_type)
             {
                 eprintln!("auth failed for socket {}: invalid user type", s.id);
+                eprintln!("user types: {:?}", session.user_types.user_types);
                 s.emit("unauthorized", "invalid user type")
                     .expect("Failed sending unauthorized");
                 return false;
